@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Brain, Mail, Lock, Loader2, ArrowRight, Shield, User } from 'lucide-react'
+import { Brain, Mail, Lock, Loader2, ArrowRight, Shield, User, CheckCircle } from 'lucide-react'
 
 interface LoginPageProps {
   onSwitchToSignUp: () => void
@@ -18,6 +18,9 @@ export default function LoginPage({ onSwitchToSignUp, onSuccess }: LoginPageProp
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [showAdminLogin, setShowAdminLogin] = useState(false)
+  const [adminCreating, setAdminCreating] = useState(false)
+  const [adminCreated, setAdminCreated] = useState(false)
+  const [adminMessage, setAdminMessage] = useState('')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -25,11 +28,6 @@ export default function LoginPage({ onSwitchToSignUp, onSuccess }: LoginPageProp
     setError('')
 
     try {
-      const { signIn } = await import('@/contexts/AuthContext').then(m => {
-        // We need to use the hook differently here
-        return { signIn: null }
-      })
-      
       // Direct supabase call since we can't use hooks in event handlers
       const { supabase } = await import('@/lib/supabase')
       const { error } = await supabase.auth.signInWithPassword({
@@ -46,6 +44,78 @@ export default function LoginPage({ onSwitchToSignUp, onSuccess }: LoginPageProp
       setError(err.message || 'An error occurred')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const createAndLoginAdmin = async () => {
+    setAdminCreating(true)
+    setAdminMessage('')
+    setError('')
+
+    try {
+      // First, try to create the admin user
+      const createRes = await fetch('/api/admin/create-user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: 'admin@tradeai.com',
+          password: 'admin123',
+          fullName: 'Admin User'
+        })
+      })
+
+      const createData = await createRes.json()
+      
+      if (createData.success) {
+        setAdminCreated(true)
+        setAdminMessage('Admin account created! Now logging in...')
+        
+        // Auto-fill and try login
+        setEmail('admin@tradeai.com')
+        setPassword('admin123')
+        
+        // Wait a moment then login
+        setTimeout(async () => {
+          const { supabase } = await import('@/lib/supabase')
+          const { error } = await supabase.auth.signInWithPassword({
+            email: 'admin@tradeai.com',
+            password: 'admin123'
+          })
+          
+          if (error) {
+            setAdminMessage('Account created! Please check your email to confirm, then login.')
+            setError(error.message)
+          } else {
+            onSuccess()
+          }
+          setAdminCreating(false)
+        }, 1000)
+      } else {
+        // User might already exist, try to login directly
+        if (createData.error?.includes('already') || createData.error?.includes('registered')) {
+          setAdminMessage('Account exists! Logging in...')
+          setEmail('admin@tradeai.com')
+          setPassword('admin123')
+          
+          const { supabase } = await import('@/lib/supabase')
+          const { error } = await supabase.auth.signInWithPassword({
+            email: 'admin@tradeai.com',
+            password: 'admin123'
+          })
+          
+          if (error) {
+            setError('Login failed. The admin account exists but password may be different.')
+          } else {
+            onSuccess()
+          }
+        } else {
+          setError(createData.error || 'Failed to create admin account')
+        }
+        setAdminCreating(false)
+      }
+    } catch (err: any) {
+      setError(err.message || 'An error occurred')
+      setAdminCreating(false)
     }
   }
 
@@ -135,6 +205,7 @@ export default function LoginPage({ onSwitchToSignUp, onSuccess }: LoginPageProp
             {/* Admin Login Toggle */}
             <div className="mt-4 pt-4 border-t border-gray-800">
               <button
+                type="button"
                 onClick={() => setShowAdminLogin(!showAdminLogin)}
                 className="w-full flex items-center justify-center gap-2 text-gray-500 hover:text-amber-400 text-sm transition-colors"
               >
@@ -148,24 +219,36 @@ export default function LoginPage({ onSwitchToSignUp, onSuccess }: LoginPageProp
                     <Shield className="h-5 w-5 text-amber-400" />
                     <span className="font-medium text-amber-400">Admin Login</span>
                   </div>
+                  
+                  {adminMessage && (
+                    <div className="mb-3 p-2 bg-green-500/10 border border-green-500/30 rounded text-green-400 text-sm flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4" />
+                      {adminMessage}
+                    </div>
+                  )}
+                  
                   <p className="text-xs text-gray-400 mb-3">
-                    Use admin credentials to access the admin dashboard.
+                    Click below to create admin account and login automatically.
                   </p>
+                  
                   <Button
                     type="button"
-                    variant="outline"
-                    className="w-full border-amber-500/30 text-amber-400 hover:bg-amber-500/20"
-                    onClick={() => {
-                      setEmail('admin@tradeai.com')
-                      setPassword('admin123')
-                    }}
+                    className="w-full bg-amber-500 hover:bg-amber-600 text-black font-medium"
+                    onClick={createAndLoginAdmin}
+                    disabled={adminCreating}
                   >
-                    <Shield className="h-4 w-4 mr-2" />
-                    Use Admin Credentials
+                    {adminCreating ? (
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    ) : (
+                      <Shield className="h-4 w-4 mr-2" />
+                    )}
+                    {adminCreating ? 'Creating & Logging in...' : 'Create Admin & Login'}
                   </Button>
-                  <p className="text-xs text-gray-500 mt-2 text-center">
-                    Email: admin@tradeai.com
-                  </p>
+                  
+                  <div className="mt-3 text-xs text-gray-500 space-y-1">
+                    <p><strong>Email:</strong> admin@tradeai.com</p>
+                    <p><strong>Password:</strong> admin123</p>
+                  </div>
                 </div>
               )}
             </div>
