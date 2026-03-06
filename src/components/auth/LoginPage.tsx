@@ -4,7 +4,8 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Brain, Mail, Lock, Loader2, ArrowRight } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
+import { Brain, Mail, Lock, Loader2, ArrowRight, Shield, User } from 'lucide-react'
 
 interface LoginPageProps {
   onSwitchToSignUp: () => void
@@ -16,6 +17,7 @@ export default function LoginPage({ onSwitchToSignUp, onSuccess }: LoginPageProp
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [showAdminLogin, setShowAdminLogin] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -128,6 +130,44 @@ export default function LoginPage({ onSwitchToSignUp, onSuccess }: LoginPageProp
                   Sign Up
                 </button>
               </p>
+            </div>
+            
+            {/* Admin Login Toggle */}
+            <div className="mt-4 pt-4 border-t border-gray-800">
+              <button
+                onClick={() => setShowAdminLogin(!showAdminLogin)}
+                className="w-full flex items-center justify-center gap-2 text-gray-500 hover:text-amber-400 text-sm transition-colors"
+              >
+                <Shield className="h-4 w-4" />
+                Admin Access
+              </button>
+              
+              {showAdminLogin && (
+                <div className="mt-4 p-4 bg-amber-500/10 border border-amber-500/30 rounded-lg">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Shield className="h-5 w-5 text-amber-400" />
+                    <span className="font-medium text-amber-400">Admin Login</span>
+                  </div>
+                  <p className="text-xs text-gray-400 mb-3">
+                    Use admin credentials to access the admin dashboard.
+                  </p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full border-amber-500/30 text-amber-400 hover:bg-amber-500/20"
+                    onClick={() => {
+                      setEmail('admin@tradeai.com')
+                      setPassword('admin123')
+                    }}
+                  >
+                    <Shield className="h-4 w-4 mr-2" />
+                    Use Admin Credentials
+                  </Button>
+                  <p className="text-xs text-gray-500 mt-2 text-center">
+                    Email: admin@tradeai.com
+                  </p>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
