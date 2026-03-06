@@ -52,6 +52,7 @@ import dynamic from 'next/dynamic'
 import { supabase } from '@/lib/supabase'
 import LoginPage from '@/components/auth/LoginPage'
 import SignUpPage from '@/components/auth/SignUpPage'
+import AdminLoginPage from '@/components/auth/AdminLoginPage'
 
 // Dynamic imports
 const MarketOverview = dynamic(() => import('@/components/dashboard/MarketOverview'), { ssr: false })
@@ -105,8 +106,9 @@ export default function Home() {
   const [loading, setLoading] = useState(true)
   const [user, setUser] = useState<any>(null)
   const [profile, setProfile] = useState<UserProfile | null>(null)
-  const [authView, setAuthView] = useState<'login' | 'signup'>('login')
+  const [authView, setAuthView] = useState<'login' | 'signup' | 'admin'>('login')
   const [isAdmin, setIsAdmin] = useState(false)
+  const [adminMode, setAdminMode] = useState(false)
   
   // AI Data states
   const [aiInsights, setAiInsights] = useState<any[]>([])
@@ -114,11 +116,38 @@ export default function Home() {
   const [opportunities, setOpportunities] = useState<any[]>([])
   const [aiLoading, setAiLoading] = useState(false)
 
+  // Check admin session from localStorage
+  useEffect(() => {
+    // Check if admin session exists
+    if (typeof window !== 'undefined') {
+      const adminSession = localStorage.getItem('admin_session')
+      if (adminSession) {
+        try {
+          const session = JSON.parse(adminSession)
+          if (session.isAdmin) {
+            setAdminMode(true)
+            setIsAdmin(true)
+            setLoading(false)
+            return
+          }
+        } catch (e) {
+          localStorage.removeItem('admin_session')
+        }
+      }
+    }
+  }, [])
+
   // Check auth state
   useEffect(() => {
     let mounted = true
     
     const checkAuth = async () => {
+      // Skip if admin mode
+      if (adminMode) {
+        setLoading(false)
+        return
+      }
+      
       try {
         const sessionPromise = supabase.auth.getSession()
         const timeoutPromise = new Promise((_, reject) => 
@@ -282,10 +311,16 @@ export default function Home() {
   }
 
   const handleSignOut = async () => {
+    // Clear admin session
+    localStorage.removeItem('admin_session')
+    document.cookie = 'admin_mode=; path=/; max-age=0'
+    
     await supabase.auth.signOut()
     setUser(null)
     setProfile(null)
     setIsAdmin(false)
+    setAdminMode(false)
+    setAuthView('login')
   }
 
   // Default data functions
@@ -329,19 +364,30 @@ export default function Home() {
   }
 
   // Auth screens
-  if (!user) {
-    if (authView === 'login') {
+  if (!user && !adminMode) {
+    if (authView === 'admin') {
       return (
-        <LoginPage
-          onSwitchToSignUp={() => setAuthView('signup')}
-          onSuccess={() => {}}
+        <AdminLoginPage
+          onBack={() => setAuthView('login')}
+          onSuccess={() => {
+            setAdminMode(true)
+            setIsAdmin(true)
+          }}
         />
       )
-    } else {
+    } else if (authView === 'signup') {
       return (
         <SignUpPage
           onSwitchToLogin={() => setAuthView('login')}
           onSuccess={() => setAuthView('login')}
+        />
+      )
+    } else {
+      return (
+        <LoginPage
+          onSwitchToSignUp={() => setAuthView('signup')}
+          onSwitchToAdmin={() => setAuthView('admin')}
+          onSuccess={() => {}}
         />
       )
     }
