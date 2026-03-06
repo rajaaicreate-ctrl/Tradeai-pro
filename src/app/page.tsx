@@ -142,6 +142,10 @@ export default function Home() {
   // Load AI data
   useEffect(() => {
     if (user) {
+      // Load default data immediately
+      setAiInsights(getDefaultInsights())
+      setCoachingTips(getDefaultCoaching())
+      setOpportunities(getDefaultOpportunities())
       loadAIData()
     }
   }, [user])
@@ -149,15 +153,17 @@ export default function Home() {
   const loadAIData = async () => {
     setAiLoading(true)
     try {
-      // Load AI insights
+      // Try to load AI insights from API
       const insightsRes = await fetch('/api/ai/analyze?action=insights')
       if (insightsRes.ok) {
         const data = await insightsRes.json()
-        setAiInsights(data.insights || getDefaultInsights())
+        if (data.insights?.length > 0) {
+          setAiInsights(data.insights)
+        }
       }
 
-      // Load coaching tips
-      const coachRes = await fetch('/api/ai/analyze?action=coaching', {
+      // Try to load coaching tips
+      const coachRes = await fetch('/api/ai/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -173,10 +179,12 @@ export default function Home() {
       })
       if (coachRes.ok) {
         const data = await coachRes.json()
-        setCoachingTips(data.tips || getDefaultCoaching())
+        if (data.tips?.length > 0) {
+          setCoachingTips(data.tips)
+        }
       }
 
-      // Load opportunities
+      // Try to load opportunities
       const scanRes = await fetch('/api/ai/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -194,13 +202,13 @@ export default function Home() {
       })
       if (scanRes.ok) {
         const data = await scanRes.json()
-        setOpportunities(data.opportunities || getDefaultOpportunities())
+        if (data.opportunities?.length > 0) {
+          setOpportunities(data.opportunities)
+        }
       }
     } catch (err) {
       console.error('AI load error:', err)
-      setAiInsights(getDefaultInsights())
-      setCoachingTips(getDefaultCoaching())
-      setOpportunities(getDefaultOpportunities())
+      // Keep default data
     } finally {
       setAiLoading(false)
     }
@@ -210,6 +218,34 @@ export default function Home() {
     await supabase.auth.signOut()
     setUser(null)
     setProfile(null)
+  }
+
+  // Default data functions
+  function getDefaultInsights() {
+    return [
+      { title: 'EUR/USD Breaking Resistance', type: 'trend', probability: 78, description: 'Strong bullish momentum detected on 4H timeframe with increasing volume confirmation.' },
+      { title: 'Gold Support Test', type: 'pattern', probability: 72, description: 'Testing key support at $2,330. Watch for bounce or breakdown confirmation.' },
+      { title: 'BTC Consolidation', type: 'neutral', probability: 65, description: 'Range-bound between $65K-$68K. Awaiting catalyst for directional move.' },
+      { title: 'USD/JPY Trend Continuation', type: 'trend', probability: 81, description: 'Strong uptrend with potential to test 150.00 resistance zone.' },
+    ]
+  }
+
+  function getDefaultCoaching() {
+    return [
+      { type: 'warning', title: 'Risk Management', message: 'Always use proper position sizing. Never risk more than 2% of your account on a single trade.' },
+      { type: 'success', title: 'Great Progress!', message: 'Your win rate improved 5% this week. Keep following your trading strategy consistently.' },
+      { type: 'info', title: 'Market Hours', message: 'Your best trades happen during London session (8-12 GMT). Consider focusing on this timeframe.' },
+      { type: 'tip', title: 'Setup Recognition', message: 'The pattern you identified has 78% historical accuracy in similar market conditions.' },
+    ]
+  }
+
+  function getDefaultOpportunities() {
+    return [
+      { symbol: 'EUR/USD', type: 'Breakout', direction: 'Long', confidence: 82, entry: 1.0892, target: 1.0950, stopLoss: 1.0860, reasoning: 'Ascending triangle pattern with volume confirmation suggests continuation.' },
+      { symbol: 'BTC/USD', type: 'Support Bounce', direction: 'Long', confidence: 68, entry: 66500, target: 68500, stopLoss: 65000, reasoning: 'Strong support zone with bullish divergence on RSI.' },
+      { symbol: 'XAU/USD', type: 'Reversal', direction: 'Short', confidence: 71, entry: 2342, target: 2310, stopLoss: 2360, reasoning: 'Double top pattern forming at key resistance level.' },
+      { symbol: 'GBP/USD', type: 'Trend Follow', direction: 'Long', confidence: 75, entry: 1.2650, target: 1.2780, stopLoss: 1.2580, reasoning: 'Uptrend continuation with momentum confirmation.' },
+    ]
   }
 
   // Loading state
