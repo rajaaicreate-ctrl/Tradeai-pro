@@ -9,11 +9,7 @@ import {
   TrendingUp, 
   TrendingDown, 
   BarChart3, 
-  LineChart,
-  ZoomIn,
-  ZoomOut,
-  RotateCcw,
-  Settings
+  LineChart
 } from 'lucide-react'
 
 interface TradingChartProps {
@@ -88,7 +84,6 @@ const calculateEMA = (data: any[], period: number) => {
   const ema = []
   const multiplier = 2 / (period + 1)
   
-  // First EMA is SMA
   let sum = 0
   for (let i = 0; i < period; i++) {
     sum += data[i].close
@@ -96,7 +91,6 @@ const calculateEMA = (data: any[], period: number) => {
   let prevEMA = sum / period
   ema.push({ time: data[period - 1].time, value: prevEMA })
   
-  // Calculate EMA
   for (let i = period; i < data.length; i++) {
     const currentEMA = (data[i].close - prevEMA) * multiplier + prevEMA
     ema.push({ time: data[i].time, value: currentEMA })
@@ -106,18 +100,17 @@ const calculateEMA = (data: any[], period: number) => {
   return ema
 }
 
-export default function TradingChart({ symbol = 'EUR/USD', height = 500 }: TradingChartProps) {
+export default function TradingChart({ symbol = 'EUR/USD', height = 400 }: TradingChartProps) {
   const chartContainerRef = useRef<HTMLDivElement>(null)
-  const chartRef = useRef<any>(null)
   const [chartType, setChartType] = useState<ChartType>('candlestick')
   const [showVolume, setShowVolume] = useState(true)
   const [showSMA20, setShowSMA20] = useState(false)
   const [showSMA50, setShowSMA50] = useState(false)
   const [showEMA, setShowEMA] = useState(false)
   const [priceData, setPriceData] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
+  const [chartLoaded, setChartLoaded] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  // Get base price based on symbol
   const getBasePrice = (sym: string) => {
     const prices: Record<string, number> = {
       'EUR/USD': 1.0892,
@@ -130,146 +123,147 @@ export default function TradingChart({ symbol = 'EUR/USD', height = 500 }: Tradi
     return prices[sym] || 100
   }
 
+  // Generate data on mount
   useEffect(() => {
     const data = generateCandleData(getBasePrice(symbol))
     setPriceData(data)
-    setLoading(false)
   }, [symbol])
 
+  // Initialize chart when data is ready
   useEffect(() => {
-    if (!chartContainerRef.current || !priceData || typeof window === 'undefined') return
+    if (!chartContainerRef.current || !priceData) return
+
+    let chart: any = null
 
     const initChart = async () => {
-      const { createChart, ColorType } = await import('lightweight-charts')
-      
-      // Clear previous chart
-      if (chartContainerRef.current) {
-        chartContainerRef.current.innerHTML = ''
-      }
+      try {
+        const lightweightCharts = await import('lightweight-charts')
+        const { createChart, ColorType } = lightweightCharts
 
-      const chart = createChart(chartContainerRef.current!, {
-        layout: {
-          background: { type: ColorType.Solid, color: '#1a1a2e' },
-          textColor: '#d1d5db',
-        },
-        grid: {
-          vertLines: { color: '#2d2d44' },
-          horzLines: { color: '#2d2d44' },
-        },
-        crosshair: {
-          mode: 1,
-          vertLine: {
-            color: '#6366f1',
-            width: 1,
-            style: 2,
+        // Clear container
+        chartContainerRef.current!.innerHTML = ''
+
+        const containerWidth = chartContainerRef.current?.clientWidth || 800
+        const chartHeight = showVolume ? height : height + 100
+
+        chart = createChart(chartContainerRef.current!, {
+          layout: {
+            background: { type: ColorType.Solid, color: '#1a1a2e' },
+            textColor: '#d1d5db',
           },
-          horzLine: {
-            color: '#6366f1',
-            width: 1,
-            style: 2,
+          grid: {
+            vertLines: { color: '#2d2d44' },
+            horzLines: { color: '#2d2d44' },
           },
-        },
-        rightPriceScale: {
-          borderColor: '#2d2d44',
-        },
-        timeScale: {
-          borderColor: '#2d2d44',
-          timeVisible: true,
-        },
-        width: chartContainerRef.current?.clientWidth || 800,
-        height: showVolume ? height : height + 100,
-      })
-
-      chartRef.current = chart
-
-      // Main series based on chart type
-      let mainSeries: any
-      
-      if (chartType === 'candlestick') {
-        mainSeries = chart.addCandlestickSeries({
-          upColor: '#22c55e',
-          downColor: '#ef4444',
-          borderDownColor: '#ef4444',
-          borderUpColor: '#22c55e',
-          wickDownColor: '#ef4444',
-          wickUpColor: '#22c55e',
+          crosshair: {
+            mode: 1,
+            vertLine: { color: '#6366f1', width: 1, style: 2 },
+            horzLine: { color: '#6366f1', width: 1, style: 2 },
+          },
+          rightPriceScale: { borderColor: '#2d2d44' },
+          timeScale: { borderColor: '#2d2d44', timeVisible: true },
+          width: containerWidth,
+          height: chartHeight,
         })
-      } else if (chartType === 'line') {
-        mainSeries = chart.addLineSeries({
-          color: '#8b5cf6',
-          lineWidth: 2,
-        })
-      } else {
-        mainSeries = chart.addAreaSeries({
-          topColor: 'rgba(139, 92, 246, 0.4)',
-          bottomColor: 'rgba(139, 92, 246, 0.0)',
-          lineColor: '#8b5cf6',
-          lineWidth: 2,
-        })
-      }
 
-      mainSeries.setData(priceData.candleData)
-
-      // Volume
-      if (showVolume) {
-        const volumeSeries = chart.addHistogramSeries({
-          priceFormat: { type: 'volume' },
-          priceScaleId: '',
-          scaleMargins: { top: 0.8, bottom: 0 },
-        })
-        volumeSeries.setData(priceData.volumeData)
-      }
-
-      // SMA 20
-      if (showSMA20) {
-        const sma20 = calculateSMA(priceData.candleData, 20)
-        const sma20Series = chart.addLineSeries({
-          color: '#f59e0b',
-          lineWidth: 1,
-          title: 'SMA 20',
-        })
-        sma20Series.setData(sma20)
-      }
-
-      // SMA 50
-      if (showSMA50) {
-        const sma50 = calculateSMA(priceData.candleData, 50)
-        const sma50Series = chart.addLineSeries({
-          color: '#3b82f6',
-          lineWidth: 1,
-          title: 'SMA 50',
-        })
-        sma50Series.setData(sma50)
-      }
-
-      // EMA 12
-      if (showEMA) {
-        const emaData = calculateEMA(priceData.candleData, 12)
-        const emaSeries = chart.addLineSeries({
-          color: '#ec4899',
-          lineWidth: 1,
-          title: 'EMA 12',
-        })
-        emaSeries.setData(emaData)
-      }
-
-      chart.timeScale().fitContent()
-
-      // Handle resize
-      const handleResize = () => {
-        if (chartContainerRef.current) {
-          chart.applyOptions({ width: chartContainerRef.current.clientWidth })
+        // Main series
+        let mainSeries: any
+        
+        if (chartType === 'candlestick') {
+          mainSeries = chart.addCandlestickSeries({
+            upColor: '#22c55e',
+            downColor: '#ef4444',
+            borderDownColor: '#ef4444',
+            borderUpColor: '#22c55e',
+            wickDownColor: '#ef4444',
+            wickUpColor: '#22c55e',
+          })
+        } else if (chartType === 'line') {
+          mainSeries = chart.addLineSeries({
+            color: '#8b5cf6',
+            lineWidth: 2,
+          })
+        } else {
+          mainSeries = chart.addAreaSeries({
+            topColor: 'rgba(139, 92, 246, 0.4)',
+            bottomColor: 'rgba(139, 92, 246, 0.0)',
+            lineColor: '#8b5cf6',
+            lineWidth: 2,
+          })
         }
-      }
-      window.addEventListener('resize', handleResize)
 
-      return () => {
-        window.removeEventListener('resize', handleResize)
-        chart.remove()
+        mainSeries.setData(priceData.candleData)
+
+        // Volume
+        if (showVolume) {
+          const volumeSeries = chart.addHistogramSeries({
+            priceFormat: { type: 'volume' },
+            priceScaleId: '',
+            scaleMargins: { top: 0.8, bottom: 0 },
+          })
+          volumeSeries.setData(priceData.volumeData)
+        }
+
+        // SMA 20
+        if (showSMA20) {
+          const sma20 = calculateSMA(priceData.candleData, 20)
+          const sma20Series = chart.addLineSeries({
+            color: '#f59e0b',
+            lineWidth: 1,
+          })
+          sma20Series.setData(sma20)
+        }
+
+        // SMA 50
+        if (showSMA50) {
+          const sma50 = calculateSMA(priceData.candleData, 50)
+          const sma50Series = chart.addLineSeries({
+            color: '#3b82f6',
+            lineWidth: 1,
+          })
+          sma50Series.setData(sma50)
+        }
+
+        // EMA
+        if (showEMA) {
+          const emaData = calculateEMA(priceData.candleData, 12)
+          const emaSeries = chart.addLineSeries({
+            color: '#ec4899',
+            lineWidth: 1,
+          })
+          emaSeries.setData(emaData)
+        }
+
+        chart.timeScale().fitContent()
+        setChartLoaded(true)
+        setError(null)
+
+        // Handle resize
+        const handleResize = () => {
+          if (chartContainerRef.current && chart) {
+            chart.applyOptions({ width: chartContainerRef.current.clientWidth })
+          }
+        }
+        window.addEventListener('resize', handleResize)
+
+        return () => {
+          window.removeEventListener('resize', handleResize)
+        }
+      } catch (err: any) {
+        console.error('Chart error:', err)
+        setError(err.message || 'Failed to load chart')
+        setChartLoaded(false)
       }
     }
 
     initChart()
+
+    return () => {
+      if (chart) {
+        chart.remove()
+        chart = null
+      }
+    }
   }, [priceData, chartType, showVolume, showSMA20, showSMA50, showEMA, height])
 
   const lastCandle = priceData?.candleData?.[priceData.candleData.length - 1]
@@ -279,12 +273,12 @@ export default function TradingChart({ symbol = 'EUR/USD', height = 500 }: Tradi
 
   return (
     <Card className="bg-gray-900/50 border-gray-800">
-      <CardHeader>
+      <CardHeader className="pb-2">
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div className="flex items-center gap-4">
             <CardTitle className="text-white flex items-center gap-2">
               <CandlestickChart className="h-5 w-5 text-purple-400" />
-              {symbol} Chart
+              {symbol}
             </CardTitle>
             {lastCandle && (
               <div className="flex items-center gap-3">
@@ -298,7 +292,6 @@ export default function TradingChart({ symbol = 'EUR/USD', height = 500 }: Tradi
           </div>
           
           <div className="flex items-center gap-2 flex-wrap">
-            {/* Chart Type Buttons */}
             <div className="flex items-center bg-gray-800 rounded-lg p-1">
               <Button
                 size="sm"
@@ -326,7 +319,6 @@ export default function TradingChart({ symbol = 'EUR/USD', height = 500 }: Tradi
               </Button>
             </div>
 
-            {/* Indicator Buttons */}
             <div className="flex items-center gap-1">
               <Button
                 size="sm"
@@ -365,15 +357,25 @@ export default function TradingChart({ symbol = 'EUR/USD', height = 500 }: Tradi
         </div>
       </CardHeader>
       <CardContent>
-        {loading ? (
+        {error ? (
+          <div className="flex items-center justify-center bg-gray-800/50 rounded-lg" style={{ height }}>
+            <div className="text-center">
+              <p className="text-red-400 mb-2">Chart Error</p>
+              <p className="text-gray-400 text-sm">{error}</p>
+            </div>
+          </div>
+        ) : !priceData ? (
           <div className="flex items-center justify-center" style={{ height }}>
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
           </div>
         ) : (
-          <div ref={chartContainerRef} className="w-full rounded-lg overflow-hidden" />
+          <div 
+            ref={chartContainerRef} 
+            className="w-full rounded-lg overflow-hidden"
+            style={{ minHeight: height }}
+          />
         )}
         
-        {/* Price Info */}
         {lastCandle && (
           <div className="grid grid-cols-4 gap-4 mt-4 pt-4 border-t border-gray-800">
             <div className="text-center">
