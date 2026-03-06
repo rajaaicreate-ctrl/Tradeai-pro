@@ -51,10 +51,16 @@ const AlertsCenter = dynamic(() => import('@/components/dashboard/AlertsCenter')
 const BacktestPanel = dynamic(() => import('@/components/dashboard/BacktestPanel'), { ssr: false })
 const PricingPlans = dynamic(() => import('@/components/dashboard/PricingPlans'), { ssr: false })
 const TradingChart = dynamic(() => import('@/components/dashboard/TradingChart'), { ssr: false })
+const IndianMarketOverview = dynamic(() => import('@/components/dashboard/IndianMarketOverview'), { ssr: false })
+const IndianStockScanner = dynamic(() => import('@/components/dashboard/IndianStockScanner'), { ssr: false })
+const IndianMarketHeatmap = dynamic(() => import('@/components/dashboard/IndianMarketHeatmap'), { ssr: false })
+const AISectorRotation = dynamic(() => import('@/components/dashboard/AISectorRotation'), { ssr: false })
+const AIIndianInsights = dynamic(() => import('@/components/dashboard/AIIndianInsights'), { ssr: false })
 
 const sidebarItems = [
   { icon: LayoutDashboard, label: 'Dashboard', id: 'dashboard' },
   { icon: TrendingUp, label: 'Markets', id: 'markets' },
+  { icon: TrendingUp, label: '🇮🇳 Indian Markets', id: 'indian-markets' },
   { icon: Zap, label: 'Scanner', id: 'scanner' },
   { icon: BarChart3, label: 'Backtest', id: 'backtest' },
   { icon: Wallet, label: 'Portfolio', id: 'portfolio' },
@@ -524,6 +530,26 @@ export default function Home() {
               <TradingChart symbol="BTC/USD" height={350} />
               <TradingChart symbol="XAU/USD" height={350} />
             </div>
+          </div>
+        )
+
+      case 'indian-markets':
+        return (
+          <div className="space-y-6">
+            {/* AI Indian Market Insights */}
+            <AIIndianInsights />
+            
+            {/* Indian Market Overview with NIFTY, SENSEX */}
+            <IndianMarketOverview />
+            
+            {/* AI Sector Rotation Tracker */}
+            <AISectorRotation />
+            
+            {/* Indian Stock Scanner */}
+            <IndianStockScanner />
+            
+            {/* Indian Market Heatmap */}
+            <IndianMarketHeatmap />
           </div>
         )
 

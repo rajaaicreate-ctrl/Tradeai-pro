@@ -128,6 +128,7 @@ export default function TradingChart({ symbol = 'EUR/USD', height = 400 }: Tradi
   useEffect(() => {
     const data = generateCandleData(getBasePrice(symbol))
     setPriceData(data)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [symbol])
 
   // Initialize chart when data is ready
@@ -255,6 +256,7 @@ export default function TradingChart({ symbol = 'EUR/USD', height = 400 }: Tradi
       console.error('Chart error:', err)
       setError(err.message || 'Failed to load chart')
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [priceData, chartType, showVolume, showSMA20, showSMA50, showEMA, height])
 
   const lastCandle = priceData?.candleData?.[priceData.candleData.length - 1]
