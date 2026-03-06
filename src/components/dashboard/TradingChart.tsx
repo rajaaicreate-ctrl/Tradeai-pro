@@ -11,6 +11,7 @@ import {
   BarChart3, 
   LineChart
 } from 'lucide-react'
+import { createChart, ColorType, CandlestickSeries, LineSeries, AreaSeries, HistogramSeries } from 'lightweight-charts'
 
 interface TradingChartProps {
   symbol?: string
@@ -102,13 +103,13 @@ const calculateEMA = (data: any[], period: number) => {
 
 export default function TradingChart({ symbol = 'EUR/USD', height = 400 }: TradingChartProps) {
   const chartContainerRef = useRef<HTMLDivElement>(null)
+  const chartRef = useRef<any>(null)
   const [chartType, setChartType] = useState<ChartType>('candlestick')
   const [showVolume, setShowVolume] = useState(true)
   const [showSMA20, setShowSMA20] = useState(false)
   const [showSMA50, setShowSMA50] = useState(false)
   const [showEMA, setShowEMA] = useState(false)
   const [priceData, setPriceData] = useState<any>(null)
-  const [chartLoaded, setChartLoaded] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const getBasePrice = (sym: string) => {
@@ -133,136 +134,126 @@ export default function TradingChart({ symbol = 'EUR/USD', height = 400 }: Tradi
   useEffect(() => {
     if (!chartContainerRef.current || !priceData) return
 
-    let chart: any = null
+    const container = chartContainerRef.current
+    container.innerHTML = ''
 
-    const initChart = async () => {
-      try {
-        const lightweightCharts = await import('lightweight-charts')
-        const { createChart, ColorType } = lightweightCharts
+    try {
+      const containerWidth = container.clientWidth || 800
+      const chartHeight = showVolume ? height : height + 100
 
-        // Clear container
-        chartContainerRef.current!.innerHTML = ''
+      const chart = createChart(container, {
+        layout: {
+          background: { type: ColorType.Solid, color: '#1a1a2e' },
+          textColor: '#d1d5db',
+        },
+        grid: {
+          vertLines: { color: '#2d2d44' },
+          horzLines: { color: '#2d2d44' },
+        },
+        crosshair: {
+          mode: 1,
+          vertLine: { color: '#6366f1', width: 1, style: 2 },
+          horzLine: { color: '#6366f1', width: 1, style: 2 },
+        },
+        rightPriceScale: { borderColor: '#2d2d44' },
+        timeScale: { borderColor: '#2d2d44', timeVisible: true },
+        width: containerWidth,
+        height: chartHeight,
+      })
 
-        const containerWidth = chartContainerRef.current?.clientWidth || 800
-        const chartHeight = showVolume ? height : height + 100
+      chartRef.current = chart
 
-        chart = createChart(chartContainerRef.current!, {
-          layout: {
-            background: { type: ColorType.Solid, color: '#1a1a2e' },
-            textColor: '#d1d5db',
-          },
-          grid: {
-            vertLines: { color: '#2d2d44' },
-            horzLines: { color: '#2d2d44' },
-          },
-          crosshair: {
-            mode: 1,
-            vertLine: { color: '#6366f1', width: 1, style: 2 },
-            horzLine: { color: '#6366f1', width: 1, style: 2 },
-          },
-          rightPriceScale: { borderColor: '#2d2d44' },
-          timeScale: { borderColor: '#2d2d44', timeVisible: true },
-          width: containerWidth,
-          height: chartHeight,
+      // Main series - using v5 API
+      let mainSeries: any
+      
+      if (chartType === 'candlestick') {
+        mainSeries = chart.addSeries(CandlestickSeries, {
+          upColor: '#22c55e',
+          downColor: '#ef4444',
+          borderDownColor: '#ef4444',
+          borderUpColor: '#22c55e',
+          wickDownColor: '#ef4444',
+          wickUpColor: '#22c55e',
         })
-
-        // Main series
-        let mainSeries: any
-        
-        if (chartType === 'candlestick') {
-          mainSeries = chart.addCandlestickSeries({
-            upColor: '#22c55e',
-            downColor: '#ef4444',
-            borderDownColor: '#ef4444',
-            borderUpColor: '#22c55e',
-            wickDownColor: '#ef4444',
-            wickUpColor: '#22c55e',
-          })
-        } else if (chartType === 'line') {
-          mainSeries = chart.addLineSeries({
-            color: '#8b5cf6',
-            lineWidth: 2,
-          })
-        } else {
-          mainSeries = chart.addAreaSeries({
-            topColor: 'rgba(139, 92, 246, 0.4)',
-            bottomColor: 'rgba(139, 92, 246, 0.0)',
-            lineColor: '#8b5cf6',
-            lineWidth: 2,
-          })
-        }
-
-        mainSeries.setData(priceData.candleData)
-
-        // Volume
-        if (showVolume) {
-          const volumeSeries = chart.addHistogramSeries({
-            priceFormat: { type: 'volume' },
-            priceScaleId: '',
-            scaleMargins: { top: 0.8, bottom: 0 },
-          })
-          volumeSeries.setData(priceData.volumeData)
-        }
-
-        // SMA 20
-        if (showSMA20) {
-          const sma20 = calculateSMA(priceData.candleData, 20)
-          const sma20Series = chart.addLineSeries({
-            color: '#f59e0b',
-            lineWidth: 1,
-          })
-          sma20Series.setData(sma20)
-        }
-
-        // SMA 50
-        if (showSMA50) {
-          const sma50 = calculateSMA(priceData.candleData, 50)
-          const sma50Series = chart.addLineSeries({
-            color: '#3b82f6',
-            lineWidth: 1,
-          })
-          sma50Series.setData(sma50)
-        }
-
-        // EMA
-        if (showEMA) {
-          const emaData = calculateEMA(priceData.candleData, 12)
-          const emaSeries = chart.addLineSeries({
-            color: '#ec4899',
-            lineWidth: 1,
-          })
-          emaSeries.setData(emaData)
-        }
-
-        chart.timeScale().fitContent()
-        setChartLoaded(true)
-        setError(null)
-
-        // Handle resize
-        const handleResize = () => {
-          if (chartContainerRef.current && chart) {
-            chart.applyOptions({ width: chartContainerRef.current.clientWidth })
-          }
-        }
-        window.addEventListener('resize', handleResize)
-
-        return () => {
-          window.removeEventListener('resize', handleResize)
-        }
-      } catch (err: any) {
-        console.error('Chart error:', err)
-        setError(err.message || 'Failed to load chart')
-        setChartLoaded(false)
+      } else if (chartType === 'line') {
+        mainSeries = chart.addSeries(LineSeries, {
+          color: '#8b5cf6',
+          lineWidth: 2,
+        })
+      } else {
+        mainSeries = chart.addSeries(AreaSeries, {
+          topColor: 'rgba(139, 92, 246, 0.4)',
+          bottomColor: 'rgba(139, 92, 246, 0.0)',
+          lineColor: '#8b5cf6',
+          lineWidth: 2,
+        })
       }
-    }
 
-    initChart()
+      mainSeries.setData(priceData.candleData)
 
-    return () => {
-      if (chart) {
-        chart.remove()
-        chart = null
+      // Volume
+      if (showVolume) {
+        const volumeSeries = chart.addSeries(HistogramSeries, {
+          priceFormat: { type: 'volume' },
+          priceScaleId: '',
+        })
+        volumeSeries.priceScale().applyOptions({
+          scaleMargins: { top: 0.8, bottom: 0 },
+        })
+        volumeSeries.setData(priceData.volumeData)
       }
+
+      // SMA 20
+      if (showSMA20) {
+        const sma20 = calculateSMA(priceData.candleData, 20)
+        const sma20Series = chart.addSeries(LineSeries, {
+          color: '#f59e0b',
+          lineWidth: 1,
+        })
+        sma20Series.setData(sma20)
+      }
+
+      // SMA 50
+      if (showSMA50) {
+        const sma50 = calculateSMA(priceData.candleData, 50)
+        const sma50Series = chart.addSeries(LineSeries, {
+          color: '#3b82f6',
+          lineWidth: 1,
+        })
+        sma50Series.setData(sma50)
+      }
+
+      // EMA
+      if (showEMA) {
+        const emaData = calculateEMA(priceData.candleData, 12)
+        const emaSeries = chart.addSeries(LineSeries, {
+          color: '#ec4899',
+          lineWidth: 1,
+        })
+        emaSeries.setData(emaData)
+      }
+
+      chart.timeScale().fitContent()
+      setError(null)
+
+      // Handle resize
+      const handleResize = () => {
+        if (container && chartRef.current) {
+          chartRef.current.applyOptions({ width: container.clientWidth })
+        }
+      }
+      window.addEventListener('resize', handleResize)
+
+      return () => {
+        window.removeEventListener('resize', handleResize)
+        if (chartRef.current) {
+          chartRef.current.remove()
+          chartRef.current = null
+        }
+      }
+    } catch (err: any) {
+      console.error('Chart error:', err)
+      setError(err.message || 'Failed to load chart')
     }
   }, [priceData, chartType, showVolume, showSMA20, showSMA50, showEMA, height])
 
