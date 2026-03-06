@@ -88,30 +88,51 @@ export default function Home() {
 
   // Check auth state
   useEffect(() => {
+    let mounted = true
+    
     const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      setUser(session?.user ?? null)
-      
-      if (session?.user) {
-        await fetchProfile(session.user.id)
-      } else {
-        setLoading(false)
+      try {
+        const sessionPromise = supabase.auth.getSession()
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Session timeout')), 5000)
+        )
+        
+        const { data: { session } } = await Promise.race([sessionPromise, timeoutPromise]) as any
+        
+        if (!mounted) return
+        
+        setUser(session?.user ?? null)
+        
+        if (session?.user) {
+          fetchProfile(session.user.id)
+        } else {
+          setLoading(false)
+        }
+      } catch (err) {
+        console.error('Auth check error:', err)
+        if (mounted) {
+          setLoading(false)
+        }
       }
     }
     
     checkAuth()
     
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (!mounted) return
       setUser(session?.user ?? null)
       if (session?.user) {
-        await fetchProfile(session.user.id)
+        fetchProfile(session.user.id)
       } else {
         setProfile(null)
         setLoading(false)
       }
     })
     
-    return () => subscription.unsubscribe()
+    return () => {
+      mounted = false
+      subscription.unsubscribe()
+    }
   }, [])
 
   // Update time
@@ -123,11 +144,16 @@ export default function Home() {
   // Fetch user profile
   const fetchProfile = async (userId: string) => {
     try {
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 5000)
+      
       const { data, error } = await supabase
         .from('users')
         .select('*')
         .eq('id', userId)
         .single()
+      
+      clearTimeout(timeoutId)
       
       if (data) {
         setProfile(data as UserProfile)
