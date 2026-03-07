@@ -376,9 +376,11 @@ export default function Home() {
   }
 
   const handleSignOut = async () => {
-    // Clear admin session
-    localStorage.removeItem('admin_session')
-    document.cookie = 'admin_mode=; path=/; max-age=0'
+    // Clear admin session (only on client side)
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('admin_session')
+      document.cookie = 'admin_mode=; path=/; max-age=0'
+    }
     
     await supabase.auth.signOut()
     setUser(null)
