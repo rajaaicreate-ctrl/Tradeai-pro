@@ -38,7 +38,14 @@ export default function SignUpPage({ onSwitchToLogin, onSuccess }: SignUpPagePro
     }
 
     try {
-      const { supabase } = await import('@/lib/supabase')
+      const { supabase, isSupabaseConfigured } = await import('@/lib/supabase')
+      
+      if (!supabase || !isSupabaseConfigured) {
+        setError('Authentication is not configured. Please contact administrator.')
+        setLoading(false)
+        return
+      }
+      
       const { error } = await supabase.auth.signUp({
         email,
         password,
