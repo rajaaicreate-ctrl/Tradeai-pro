@@ -111,7 +111,7 @@ const ADMIN_EMAILS = ['admin@tradeai.com', 'admin@tradeai.pro', 'raja@tradeai.co
 export default function Home() {
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [activeSection, setActiveSection] = useState('dashboard')
-  const [currentTime, setCurrentTime] = useState(new Date())
+  const [currentTime, setCurrentTime] = useState<Date | null>(null)
   const [loading, setLoading] = useState(true)
   const [user, setUser] = useState<any>(null)
   const [profile, setProfile] = useState<UserProfile | null>(null)
@@ -168,6 +168,15 @@ export default function Home() {
         }
       }
     }
+  }, [])
+
+  // Initialize current time on client side
+  useEffect(() => {
+    setCurrentTime(new Date())
+    const timer = setInterval(() => {
+      setCurrentTime(new Date())
+    }, 1000)
+    return () => clearInterval(timer)
   }, [])
 
   // Fetch admin stats when in admin mode
@@ -1747,7 +1756,7 @@ export default function Home() {
             </div>
             <div className="flex items-center gap-4">
               <div className="text-sm text-gray-400">
-                {currentTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })}
+                {currentTime ? currentTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }) : '--:--:--'}
               </div>
               {!isAdmin && (
                 <Button className="bg-purple-500 hover:bg-purple-600" onClick={() => setActiveSection('pricing')}>
