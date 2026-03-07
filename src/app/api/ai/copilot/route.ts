@@ -34,33 +34,64 @@ const MARKET_CATEGORIES: Record<string, { name: string; type: string; patterns: 
   'crypto': { 
     name: 'Cryptocurrency', 
     type: 'crypto', 
-    patterns: ['crypto', 'cryptocurrency', 'cryptocurrencies', 'altcoin', 'altcoins', 'coin', 'coins'],
+    patterns: [
+      'crypto', 'cryptocurrency', 'cryptocurrencies', 'altcoin', 'altcoins', 
+      'coin', 'coins', 'crypto market', 'crypto today', 'digital assets',
+      'bitcoin market', 'eth market', 'btc analysis', 'crypto analysis',
+      'how is crypto', 'crypto outlook', 'crypto trend'
+    ],
     assets: ['BTC/USD', 'ETH/USD', 'SOL/USD', 'XRP/USD', 'BNB/USD']
   },
   'forex': { 
     name: 'Forex', 
     type: 'forex', 
-    patterns: ['forex', 'currency', 'currencies', 'fx', 'foreign exchange'],
+    patterns: [
+      'forex', 'currency', 'currencies', 'fx', 'foreign exchange',
+      'forex market', 'forex today', 'currency market', 'forex outlook',
+      'how is forex', 'currency pairs', 'major pairs'
+    ],
     assets: ['EUR/USD', 'GBP/USD', 'USD/JPY']
   },
   'gold': { 
     name: 'Gold & Silver', 
     type: 'commodity', 
-    patterns: ['gold', 'silver', 'precious metals', 'metals', 'commodities'],
+    patterns: [
+      'gold', 'silver', 'precious metals', 'metals', 'commodities',
+      'gold market', 'gold today', 'silver market', 'commodities market',
+      'how is gold', 'gold outlook', 'xau', 'xag'
+    ],
     assets: ['XAU/USD', 'XAG/USD']
   },
   'indian': { 
     name: 'Indian Markets', 
     type: 'index_in', 
-    patterns: ['indian', 'india', 'nse', 'bse', 'indian stocks', 'indian market'],
+    patterns: [
+      'indian', 'india', 'nse', 'bse', 'indian stocks', 'indian market',
+      'india market', 'indian indices', 'nifty market', 'sensex market',
+      'how is indian', 'india today', 'indian stocks today', 'nse today',
+      'bse today', 'indian market outlook'
+    ],
     assets: ['NIFTY 50', 'SENSEX', 'RELIANCE', 'TCS', 'HDFC']
   },
   'us_stocks': { 
     name: 'US Stocks', 
     type: 'stock_us', 
-    patterns: ['us stocks', 'us market', 'wall street', 'nasdaq', 'sp500', 's&p', 'dow'],
+    patterns: [
+      'us stocks', 'us market', 'wall street', 'nasdaq', 'sp500', 's&p', 'dow',
+      'us equities', 'american stocks', 'us stock market', 'us markets today',
+      'how are us stocks', 'us market outlook', 'tech stocks', 'wall street today'
+    ],
     assets: ['AAPL', 'TSLA', 'MSFT', 'GOOGL', 'AMZN']
   },
+  'stocks': {
+    name: 'Stock Markets',
+    type: 'stock_us',
+    patterns: [
+      'stocks', 'stock market', 'equities', 'shares', 'stock today',
+      'how are stocks', 'stock market today', 'equity market'
+    ],
+    assets: ['AAPL', 'TSLA', 'MSFT', 'GOOGL', 'AMZN']
+  }
 }
 
 // Base prices for different assets
@@ -389,49 +420,88 @@ export async function POST(request: NextRequest) {
     // If no specific asset, check for market category
     if (!assetDetection) {
       
-      // Check for market category
+      // Check for market category - use word boundary matching for better accuracy
       for (const [key, category] of Object.entries(MARKET_CATEGORIES)) {
+        let categoryMatched = false
+        
         for (const pattern of category.patterns) {
-          if (lowerQuestion.includes(pattern)) {
-            // Generate market overview for this category
-            const assetsData = category.assets.map(asset => {
-              const type = category.type
-              const marketData = generateMarketData(asset, type)
-              return {
-                asset,
-                price: marketData.price,
-                trend: marketData.trend,
-                rsi: Math.round(marketData.rsi)
-              }
-            })
-            
-            // Determine overall market sentiment
-            const bullishCount = assetsData.filter(a => a.trend === 'Bullish').length
-            const bearishCount = assetsData.filter(a => a.trend === 'Bearish').length
-            const overallSentiment = bullishCount > bearishCount ? 'Bullish' : 
-                                    bearishCount > bullishCount ? 'Bearish' : 'Mixed'
-            
-            const insight = `📊 **${category.name} Market Overview**\n\n` +
-              `Overall Sentiment: **${overallSentiment}**\n\n` +
-              assetsData.map(a => 
-                `• **${a.asset}**: $${a.price.toLocaleString()} | ${a.trend} | RSI: ${a.rsi}`
-              ).join('\n') +
-              `\n\n💡 *Tip: Ask about a specific asset like "Is BTC bullish?" for detailed analysis.*`
-            
-            return NextResponse.json({
-              success: true,
-              data: {
-                response: insight,
-                category: category.name,
-                assets: assetsData,
-                suggestedQuestions: [
-                  `Is ${category.assets[0].split('/')[0]} bullish today?`,
-                  `What is the trend for ${category.assets[1]?.split('/')[0] || category.assets[0].split('/')[0]}?`,
-                  `Where is support for ${category.assets[0]}?`
-                ]
-              }
-            })
+          // Use more flexible matching - check if pattern appears as a word or phrase
+          const regex = new RegExp(`\\b${pattern.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\\b`, 'i')
+          if (regex.test(lowerQuestion) || lowerQuestion.includes(pattern)) {
+            categoryMatched = true
+            break
           }
+        }
+        
+        if (categoryMatched) {
+          // Generate market overview for this category
+          const assetsData = category.assets.map(asset => {
+            const type = category.type
+            const marketData = generateMarketData(asset, type)
+            return {
+              asset,
+              price: marketData.price,
+              trend: marketData.trend,
+              rsi: Math.round(marketData.rsi),
+              change: ((marketData.price - (BASE_PRICES[asset] || 100)) / (BASE_PRICES[asset] || 100) * 100).toFixed(2)
+            }
+          })
+          
+          // Determine overall market sentiment
+          const bullishCount = assetsData.filter(a => a.trend === 'Bullish').length
+          const bearishCount = assetsData.filter(a => a.trend === 'Bearish').length
+          const overallSentiment = bullishCount > bearishCount ? 'Bullish' : 
+                                  bearishCount > bullishCount ? 'Bearish' : 'Mixed'
+          
+          // Generate AI-powered category insight
+          let categoryInsight = ''
+          try {
+            const zai = await ZAI.create()
+            const insightPrompt = `You are a market analyst. Provide a brief 2-3 sentence overview of the ${category.name} market.
+            
+Current data:
+${assetsData.map(a => `${a.asset}: $${a.price.toFixed(2)} | ${a.trend} | RSI: ${a.rsi}`).join('\n')}
+
+Overall sentiment: ${overallSentiment}
+
+Give a concise market summary mentioning key movers and overall trend. Be conversational and helpful.`
+
+            const completion = await zai.chat.completions.create({
+              messages: [
+                { role: 'system', content: 'You are a professional market analyst providing brief market overviews.' },
+                { role: 'user', content: insightPrompt }
+              ],
+              temperature: 0.7,
+              max_tokens: 150
+            })
+            categoryInsight = completion.choices[0]?.message?.content || ''
+          } catch (e) {
+            // Fallback insight
+            categoryInsight = `The ${category.name} market is currently showing ${overallSentiment.toLowerCase()} sentiment with ${bullishCount} out of ${assetsData.length} assets trending upward.`
+          }
+          
+          const insight = `📊 **${category.name} Market Overview**\n\n` +
+            `Overall Sentiment: **${overallSentiment}**\n\n` +
+            assetsData.map(a => {
+              const changeIcon = parseFloat(a.change) >= 0 ? '🟢' : '🔴'
+              return `${changeIcon} **${a.asset}**: $${a.price.toLocaleString()} | ${a.trend} | RSI: ${a.rsi}`
+            }).join('\n') +
+            `\n\n💬 ${categoryInsight}` +
+            `\n\n💡 *Ask about a specific asset like "Is BTC bullish?" for detailed technical analysis.*`
+          
+          return NextResponse.json({
+            success: true,
+            data: {
+              response: insight,
+              category: category.name,
+              assets: assetsData,
+              suggestedQuestions: [
+                `Is ${category.assets[0].split('/')[0]} bullish today?`,
+                `What is the trend for ${category.assets[1]?.split('/')[0] || category.assets[0].split('/')[0]}?`,
+                `Where is support for ${category.assets[0]}?`
+              ]
+            }
+          })
         }
       }
       
@@ -475,10 +545,42 @@ export async function POST(request: NextRequest) {
         })
       }
       
+      // Try to provide a helpful default response with AI
+      try {
+        const zai = await ZAI.create()
+        const completion = await zai.chat.completions.create({
+          messages: [
+            { role: 'system', content: 'You are a helpful market assistant for TradeAI Pro. If the user asks something not related to markets, guide them to market-related topics. Be friendly and brief.' },
+            { role: 'user', content: `The user asked: "${question}". This doesn't match any specific asset or market category I track. Please provide a brief, friendly response guiding them to ask about markets like crypto, forex, stocks, or commodities. Keep it under 3 sentences.` }
+          ],
+          temperature: 0.7,
+          max_tokens: 100
+        })
+        
+        const aiResponse = completion.choices[0]?.message?.content
+        
+        if (aiResponse) {
+          return NextResponse.json({
+            success: true,
+            data: {
+              response: aiResponse + "\n\n📌 Try asking about:\n• **Crypto**: 'How is crypto today?' or 'Is BTC bullish?'\n• **Forex**: 'EURUSD trend' or 'Forex outlook'\n• **Stocks**: 'US stocks today' or 'Indian market'\n• **Commodities**: 'Gold analysis' or 'Silver price'",
+              suggestedQuestions: [
+                "How is the crypto market today?",
+                "Is BTC bullish?",
+                "What is the trend for EURUSD?",
+                "Is Gold trending up?"
+              ]
+            }
+          })
+        }
+      } catch (e) {
+        // Fall through to default response
+      }
+      
       return NextResponse.json({
         success: true,
         data: {
-          response: "I couldn't identify a specific asset in your question. Please mention an asset like BTC, ETH, EURUSD, Gold, NIFTY, or specific stock names.\n\nYou can also ask about market categories:\n• 'How is crypto today?'\n• 'Forex outlook'\n• 'Indian market'",
+          response: "I'm here to help with market analysis! I can analyze:\n\n🪙 **Crypto**: BTC, ETH, SOL, XRP, BNB\n💱 **Forex**: EUR/USD, GBP/USD, USD/JPY\n📈 **US Stocks**: AAPL, TSLA, MSFT, GOOGL\n🇮🇳 **Indian Markets**: NIFTY, SENSEX, Reliance, TCS\n🏆 **Commodities**: Gold, Silver\n\nJust ask something like 'How is crypto today?' or 'Is BTC bullish?'",
           suggestedQuestions: [
             "How is the crypto market today?",
             "Is BTC bullish?",
