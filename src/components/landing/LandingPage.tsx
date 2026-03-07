@@ -72,15 +72,15 @@ function useCounter(end: number, duration: number = 2000, start: boolean = true)
 }
 
 // Floating particle component
-function Particle({ delay, duration, size }: { delay: number; duration: number; size: number }) {
+function Particle({ delay, duration, size, left, top }: { delay: number; duration: number; size: number; left: number; top: number }) {
   return (
     <div
       className="absolute rounded-full bg-gradient-to-r from-purple-500/30 to-cyan-500/30 blur-sm"
       style={{
         width: size,
         height: size,
-        left: `${Math.random() * 100}%`,
-        top: `${Math.random() * 100}%`,
+        left: `${left}%`,
+        top: `${top}%`,
         animation: `float ${duration}s ease-in-out ${delay}s infinite`,
       }}
     />
@@ -339,11 +339,21 @@ function AnimatedStats() {
 export default function LandingPage({ onLogin, onSignUp }: LandingPageProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [scrollY, setScrollY] = useState(0)
+  const [currentTime, setCurrentTime] = useState<string>('')
 
   useEffect(() => {
+    // Set current time on client
+    const timeInterval = setInterval(() => {
+      setCurrentTime(new Date().toLocaleTimeString())
+    }, 1000)
+    
     const handleScroll = () => setScrollY(window.scrollY)
     window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
+    
+    return () => {
+      clearInterval(timeInterval)
+      window.removeEventListener('scroll', handleScroll)
+    }
   }, [])
 
   const features = [
@@ -480,7 +490,14 @@ export default function LandingPage({ onLogin, onSignUp }: LandingPageProps) {
         
         {/* Floating Particles */}
         {[...Array(20)].map((_, i) => (
-          <Particle key={i} delay={i * 0.5} duration={5 + Math.random() * 5} size={4 + Math.random() * 8} />
+          <Particle 
+            key={i} 
+            delay={i * 0.5} 
+            duration={5 + (i % 5)} 
+            size={4 + (i % 8)} 
+            left={(i * 5) % 100}
+            top={(i * 7 + 10) % 100}
+          />
         ))}
         
         {/* Grid Pattern */}
@@ -670,7 +687,7 @@ export default function LandingPage({ onLogin, onSignUp }: LandingPageProps) {
                   </Badge>
                 </div>
                 <div className="text-gray-500 text-sm">
-                  {new Date().toLocaleTimeString()}
+                  {currentTime || '--:--:--'}
                 </div>
               </div>
               
