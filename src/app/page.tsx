@@ -1703,8 +1703,8 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gray-950 text-white flex">
       {/* Sidebar */}
-      <aside className={`${sidebarOpen ? 'w-64' : 'w-16'} bg-gray-900/80 border-r border-gray-800 flex flex-col transition-all duration-300 fixed h-full z-50`}>
-        <div className="p-4 border-b border-gray-800">
+      <aside className={`${sidebarOpen ? 'w-64' : 'w-16'} bg-gray-900/80 border-r border-gray-800 flex flex-col transition-all duration-300 fixed h-screen z-50`}>
+        <div className="p-4 border-b border-gray-800 flex-shrink-0">
           <div className="flex items-center justify-between">
             {sidebarOpen && (
               <div className="flex items-center gap-2">
@@ -1723,29 +1723,31 @@ export default function Home() {
           </div>
         </div>
 
-        <ScrollArea className="flex-1 p-2">
-          <nav className="space-y-1">
-            {currentSidebarItems.map((item) => (
-              <Button
-                key={item.id}
-                variant={activeSection === item.id ? 'secondary' : 'ghost'}
-                className={`w-full justify-start gap-3 ${
-                  activeSection === item.id 
-                    ? isAdmin 
-                      ? 'bg-amber-500/20 text-amber-400 hover:bg-amber-500/30' 
-                      : 'bg-purple-500/20 text-purple-400 hover:bg-purple-500/30' 
-                    : 'text-gray-400 hover:text-white'
-                }`}
-                onClick={() => setActiveSection(item.id)}
-              >
-                <item.icon className="h-4 w-4 flex-shrink-0" />
-                {sidebarOpen && <span className="truncate">{item.label}</span>}
-              </Button>
-            ))}
-          </nav>
-        </ScrollArea>
+        <div className="flex-1 overflow-hidden">
+          <ScrollArea className="h-full px-2 py-2">
+            <nav className="space-y-1">
+              {currentSidebarItems.map((item) => (
+                <Button
+                  key={item.id}
+                  variant={activeSection === item.id ? 'secondary' : 'ghost'}
+                  className={`w-full justify-start gap-3 ${
+                    activeSection === item.id 
+                      ? isAdmin 
+                        ? 'bg-amber-500/20 text-amber-400 hover:bg-amber-500/30' 
+                        : 'bg-purple-500/20 text-purple-400 hover:bg-purple-500/30' 
+                      : 'text-gray-400 hover:text-white'
+                  }`}
+                  onClick={() => setActiveSection(item.id)}
+                >
+                  <item.icon className="h-4 w-4 flex-shrink-0" />
+                  {sidebarOpen && <span className="truncate">{item.label}</span>}
+                </Button>
+              ))}
+            </nav>
+          </ScrollArea>
+        </div>
 
-        <div className="p-4 border-t border-gray-800">
+        <div className="p-4 border-t border-gray-800 flex-shrink-0">
           {sidebarOpen ? (
             <div className="flex items-center gap-3">
               <div className={`w-8 h-8 rounded-full flex items-center justify-center ${isAdmin ? 'bg-gradient-to-br from-amber-500 to-red-500' : 'bg-gradient-to-br from-cyan-500 to-purple-500'}`}>
