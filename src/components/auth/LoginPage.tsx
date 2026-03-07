@@ -1,10 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Brain, Mail, Lock, Loader2, ArrowRight, Shield } from 'lucide-react'
+import { Brain, Mail, Lock, Loader2, ArrowRight, Shield, AlertTriangle } from 'lucide-react'
+import { isSupabaseConfigured } from '@/lib/supabase'
 
 interface LoginPageProps {
   onSwitchToSignUp: () => void
@@ -17,6 +18,12 @@ export default function LoginPage({ onSwitchToSignUp, onSwitchToAdmin, onSuccess
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [isConfigured, setIsConfigured] = useState(true)
+
+  useEffect(() => {
+    // Check if Supabase is configured
+    setIsConfigured(isSupabaseConfigured())
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -64,6 +71,17 @@ export default function LoginPage({ onSwitchToSignUp, onSwitchToAdmin, onSuccess
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Demo Mode Warning */}
+              {!isConfigured && (
+                <div className="bg-amber-500/10 border border-amber-500/50 text-amber-400 text-sm p-3 rounded-lg flex items-start gap-2">
+                  <AlertTriangle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="font-medium">Demo Mode</p>
+                    <p className="text-xs mt-1">Supabase is not configured. Sign in to Admin Portal to explore the platform.</p>
+                  </div>
+                </div>
+              )}
+              
               {error && (
                 <div className="bg-red-500/10 border border-red-500/50 text-red-400 text-sm p-3 rounded-lg">
                   {error}

@@ -1,23 +1,66 @@
 // Supabase Client Configuration for TradeAI Pro
 // Supports: Authentication, Database, Real-time subscriptions
 
-import { createClient } from '@supabase/supabase-js'
+import { createClient, SupabaseClient } from '@supabase/supabase-js'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://demo.supabase.co'
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'demo-key'
+// Get environment variables with proper fallback
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    persistSession: true,
-    autoRefreshToken: true,
-    detectSessionInUrl: true
-  },
-  realtime: {
-    params: {
-      eventsPerSecond: 10
-    }
+// Check if Supabase is properly configured
+const isConfigured = supabaseUrl && supabaseAnonKey && 
+  supabaseUrl !== 'https://demo.supabase.co' &&
+  supabaseAnonKey !== 'demo-key'
+
+// Create a mock client for when Supabase is not configured
+class MockSupabaseClient {
+  auth = {
+    getSession: async () => ({ data: { session: null }, error: null }),
+    getUser: async () => ({ data: { user: null }, error: null }),
+    signInWithPassword: async () => ({ data: { user: null, session: null }, error: { message: 'Supabase not configured. Please set environment variables.' } }),
+    signUp: async () => ({ data: { user: null, session: null }, error: { message: 'Supabase not configured. Please set environment variables.' } }),
+    signOut: async () => ({ error: null }),
+    onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
+    refreshSession: async () => ({ data: { session: null }, error: null }),
   }
-})
+  from = () => ({
+    select: () => ({ data: [], error: null, single: async () => ({ data: null, error: null }) }),
+    insert: () => ({ data: null, error: null }),
+    update: () => ({ data: null, error: null }),
+    delete: () => ({ data: null, error: null }),
+    upsert: () => ({ data: null, error: null }),
+  })
+  channel = () => ({
+    on: () => ({ subscribe: () => {} }),
+    subscribe: () => {}
+  })
+}
+
+// Create the appropriate client based on configuration
+let supabaseInstance: SupabaseClient | MockSupabaseClient
+
+if (isConfigured) {
+  supabaseInstance = createClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true
+    },
+    realtime: {
+      params: {
+        eventsPerSecond: 10
+      }
+    }
+  })
+} else {
+  console.warn('Supabase not configured. Using demo mode.')
+  supabaseInstance = new MockSupabaseClient()
+}
+
+export const supabase = supabaseInstance
+
+// Export configuration status for components to check
+export const isSupabaseConfigured = () => isConfigured
 
 // Database Types
 export interface DatabaseUser {
