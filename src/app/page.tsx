@@ -46,7 +46,9 @@ import {
   AlertCircle,
   TrendingDown,
   PieChart,
-  DollarSign
+  DollarSign,
+  MessageCircle,
+  Image
 } from 'lucide-react'
 import dynamic from 'next/dynamic'
 import { supabase } from '@/lib/supabase'
@@ -65,6 +67,8 @@ const IndianStockScanner = dynamic(() => import('@/components/dashboard/IndianSt
 const IndianMarketHeatmap = dynamic(() => import('@/components/dashboard/IndianMarketHeatmap'), { ssr: false })
 const AISectorRotation = dynamic(() => import('@/components/dashboard/AISectorRotation'), { ssr: false })
 const AIIndianInsights = dynamic(() => import('@/components/dashboard/AIIndianInsights'), { ssr: false })
+const AIMarketCopilot = dynamic(() => import('@/components/dashboard/AIMarketCopilot'), { ssr: false })
+const AIChartAnalysis = dynamic(() => import('@/components/dashboard/AIChartAnalysis'), { ssr: false })
 
 const sidebarItems = [
   { icon: LayoutDashboard, label: 'Dashboard', id: 'dashboard' },
@@ -74,6 +78,8 @@ const sidebarItems = [
   { icon: BarChart3, label: 'Backtest', id: 'backtest' },
   { icon: Wallet, label: 'Portfolio', id: 'portfolio' },
   { icon: Brain, label: 'AI Insights', id: 'insights' },
+  { icon: MessageCircle, label: 'AI Copilot', id: 'ai-copilot' },
+  { icon: Image, label: 'Chart Analysis', id: 'chart-analysis' },
   { icon: GraduationCap, label: 'AI Coach', id: 'coach' },
   { icon: Bell, label: 'Alerts', id: 'alerts' },
   { icon: CreditCard, label: 'Pricing', id: 'pricing' },
@@ -1545,6 +1551,40 @@ export default function Home() {
                 </CardContent>
               </Card>
             </div>
+          </div>
+        )
+
+      case 'ai-copilot':
+        return (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold text-white">AI Market Copilot</h2>
+                <p className="text-gray-400">Your intelligent trading assistant - Ask any market question</p>
+              </div>
+              <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30">
+                <Sparkles className="h-4 w-4 mr-1" />
+                AI Powered
+              </Badge>
+            </div>
+            <AIMarketCopilot className="h-[600px]" />
+          </div>
+        )
+
+      case 'chart-analysis':
+        return (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold text-white">AI Chart Analysis</h2>
+                <p className="text-gray-400">Upload your chart for AI-powered technical analysis</p>
+              </div>
+              <Badge className="bg-cyan-500/20 text-cyan-400 border-cyan-500/30">
+                <BarChart3 className="h-4 w-4 mr-1" />
+                Technical Analysis
+              </Badge>
+            </div>
+            <AIChartAnalysis />
           </div>
         )
 
