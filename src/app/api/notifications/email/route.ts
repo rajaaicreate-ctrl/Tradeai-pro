@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          from: 'TradeAI Pro <alerts@tradeai.pro>',
+          from: 'TradeAI Pro <onboarding@resend.dev>',
           to: [to],
           subject: subject,
           html: generateEmailHTML(subject, message, type, data)
