@@ -29,6 +29,40 @@ const ASSET_PATTERNS: Record<string, { name: string; type: string; patterns: str
   'BNB': { name: 'BNB/USD', type: 'crypto', patterns: ['bnb', 'binance coin'] },
 }
 
+// General market category detection
+const MARKET_CATEGORIES: Record<string, { name: string; type: string; patterns: string[]; assets: string[] }> = {
+  'crypto': { 
+    name: 'Cryptocurrency', 
+    type: 'crypto', 
+    patterns: ['crypto', 'cryptocurrency', 'cryptocurrencies', 'altcoin', 'altcoins', 'coin', 'coins'],
+    assets: ['BTC/USD', 'ETH/USD', 'SOL/USD', 'XRP/USD', 'BNB/USD']
+  },
+  'forex': { 
+    name: 'Forex', 
+    type: 'forex', 
+    patterns: ['forex', 'currency', 'currencies', 'fx', 'foreign exchange'],
+    assets: ['EUR/USD', 'GBP/USD', 'USD/JPY']
+  },
+  'gold': { 
+    name: 'Gold & Silver', 
+    type: 'commodity', 
+    patterns: ['gold', 'silver', 'precious metals', 'metals', 'commodities'],
+    assets: ['XAU/USD', 'XAG/USD']
+  },
+  'indian': { 
+    name: 'Indian Markets', 
+    type: 'index_in', 
+    patterns: ['indian', 'india', 'nse', 'bse', 'indian stocks', 'indian market'],
+    assets: ['NIFTY 50', 'SENSEX', 'RELIANCE', 'TCS', 'HDFC']
+  },
+  'us_stocks': { 
+    name: 'US Stocks', 
+    type: 'stock_us', 
+    patterns: ['us stocks', 'us market', 'wall street', 'nasdaq', 'sp500', 's&p', 'dow'],
+    assets: ['AAPL', 'TSLA', 'MSFT', 'GOOGL', 'AMZN']
+  },
+}
+
 // Base prices for different assets
 const BASE_PRICES: Record<string, number> = {
   'BTC/USD': 94500,
@@ -296,16 +330,105 @@ export async function POST(request: NextRequest) {
     // Detect asset from question
     const assetDetection = detectAsset(question)
     
+    // If no specific asset, check for market category
     if (!assetDetection) {
+      const lowerQuestion = question.toLowerCase()
+      
+      // Check for market category
+      for (const [key, category] of Object.entries(MARKET_CATEGORIES)) {
+        for (const pattern of category.patterns) {
+          if (lowerQuestion.includes(pattern)) {
+            // Generate market overview for this category
+            const assetsData = category.assets.map(asset => {
+              const type = category.type
+              const marketData = generateMarketData(asset, type)
+              return {
+                asset,
+                price: marketData.price,
+                trend: marketData.trend,
+                rsi: Math.round(marketData.rsi)
+              }
+            })
+            
+            // Determine overall market sentiment
+            const bullishCount = assetsData.filter(a => a.trend === 'Bullish').length
+            const bearishCount = assetsData.filter(a => a.trend === 'Bearish').length
+            const overallSentiment = bullishCount > bearishCount ? 'Bullish' : 
+                                    bearishCount > bullishCount ? 'Bearish' : 'Mixed'
+            
+            const insight = `📊 **${category.name} Market Overview**\n\n` +
+              `Overall Sentiment: **${overallSentiment}**\n\n` +
+              assetsData.map(a => 
+                `• **${a.asset}**: $${a.price.toLocaleString()} | ${a.trend} | RSI: ${a.rsi}`
+              ).join('\n') +
+              `\n\n💡 *Tip: Ask about a specific asset like "Is BTC bullish?" for detailed analysis.*`
+            
+            return NextResponse.json({
+              success: true,
+              data: {
+                response: insight,
+                category: category.name,
+                assets: assetsData,
+                suggestedQuestions: [
+                  `Is ${category.assets[0].split('/')[0]} bullish today?`,
+                  `What is the trend for ${category.assets[1]?.split('/')[0] || category.assets[0].split('/')[0]}?`,
+                  `Where is support for ${category.assets[0]}?`
+                ]
+              }
+            })
+          }
+        }
+      }
+      
+      // Check for greeting or general questions
+      if (lowerQuestion.includes('hello') || lowerQuestion.includes('hi') || lowerQuestion.includes('hey')) {
+        return NextResponse.json({
+          success: true,
+          data: {
+            response: "👋 Hello! I'm your AI Market Copilot. I can help you analyze:\n\n" +
+              "• **Crypto**: BTC, ETH, SOL, XRP, BNB\n" +
+              "• **Forex**: EUR/USD, GBP/USD, USD/JPY\n" +
+              "• **Commodities**: Gold, Silver\n" +
+              "• **Indian Markets**: NIFTY, SENSEX, Reliance, TCS\n" +
+              "• **US Stocks**: AAPL, TSLA, MSFT, GOOGL, AMZN\n\n" +
+              "Ask me anything like 'Is BTC bullish?' or 'What's the crypto market outlook?'",
+            suggestedQuestions: [
+              "How is the crypto market today?",
+              "Is Bitcoin bullish?",
+              "What is Gold's trend?"
+            ]
+          }
+        })
+      }
+      
+      // Check for general market questions
+      if (lowerQuestion.includes('market') || lowerQuestion.includes('today') || lowerQuestion.includes('how')) {
+        return NextResponse.json({
+          success: true,
+          data: {
+            response: "📈 I can help you analyze specific markets! Try asking about:\n\n" +
+              "**Cryptocurrencies**:\n• 'How is crypto today?'\n• 'Is BTC bullish?'\n\n" +
+              "**Forex**:\n• 'What is EURUSD trend?'\n• 'Forex outlook'\n\n" +
+              "**Indian Markets**:\n• 'How is NIFTY?'\n• 'Indian market today'\n\n" +
+              "**Commodities**:\n• 'Gold analysis'\n• 'Silver price'",
+            suggestedQuestions: [
+              "How is the crypto market today?",
+              "What is the trend for EURUSD?",
+              "Is Gold bullish?"
+            ]
+          }
+        })
+      }
+      
       return NextResponse.json({
         success: true,
         data: {
-          response: "I couldn't identify a specific asset in your question. Please mention an asset like BTC, ETH, EURUSD, Gold, NIFTY, or specific stock names.",
+          response: "I couldn't identify a specific asset in your question. Please mention an asset like BTC, ETH, EURUSD, Gold, NIFTY, or specific stock names.\n\nYou can also ask about market categories:\n• 'How is crypto today?'\n• 'Forex outlook'\n• 'Indian market'",
           suggestedQuestions: [
-            "Is BTC bullish today?",
+            "How is the crypto market today?",
+            "Is BTC bullish?",
             "What is the trend for EURUSD?",
-            "Where is support for Gold?",
-            "Is NIFTY trending up?"
+            "Is Gold trending up?"
           ]
         }
       })
