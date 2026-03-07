@@ -4,6 +4,13 @@ import { useState, useEffect, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import {
   Brain,
   TrendingUp,
   BarChart3,
@@ -37,7 +44,10 @@ import {
   Clock,
   Star,
   ArrowUpRight,
-  Lock
+  Lock,
+  FileText,
+  Mail,
+  AlertTriangle
 } from 'lucide-react'
 
 interface LandingPageProps {
@@ -298,6 +308,7 @@ export default function LandingPage({ onLogin, onSignUp }: LandingPageProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [scrollY, setScrollY] = useState(0)
   const [currentTime, setCurrentTime] = useState<string>('')
+  const [legalModal, setLegalModal] = useState<string | null>(null)
 
   useEffect(() => {
     // Set current time on client
@@ -1029,24 +1040,208 @@ export default function LandingPage({ onLogin, onSignUp }: LandingPageProps) {
               </div>
             </button>
             
-            <div className="flex items-center gap-8 text-sm text-gray-400">
-              <button onClick={() => scrollToSection('about')} className="hover:text-white transition-colors cursor-pointer">About</button>
-              <button onClick={() => scrollToSection('pricing')} className="hover:text-white transition-colors cursor-pointer">Pricing</button>
-              <button onClick={() => scrollToSection('features')} className="hover:text-white transition-colors cursor-pointer">Features</button>
+            {/* Legal Links */}
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              {[
+                { id: 'privacy', label: 'Privacy Policy', icon: Shield },
+                { id: 'terms', label: 'Terms', icon: FileText },
+                { id: 'security', label: 'Security', icon: Lock },
+                { id: 'contact', label: 'Contact', icon: Mail },
+                { id: 'risk', label: 'Risk Disclaimer', icon: AlertTriangle },
+              ].map((link) => (
+                <button
+                  key={link.id}
+                  onClick={() => setLegalModal(link.id)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-gray-400 hover:text-white hover:bg-gray-800/50 rounded-lg transition-colors"
+                >
+                  <link.icon className="h-3 w-3" />
+                  {link.label}
+                </button>
+              ))}
             </div>
 
-            <div className="text-gray-500 text-sm">
-              © 2025 TradeAI Pro. All rights reserved.
+            <div className="flex items-center gap-4">
+              <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors">
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path fillRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clipRule="evenodd" />
+                </svg>
+              </a>
+              <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors">
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                </svg>
+              </a>
             </div>
           </div>
           
-          <div className="mt-8 pt-8 border-t border-gray-800/50 text-center">
+          <div className="mt-6 text-center text-gray-500 text-sm">
+            © 2025 TradeAI Pro. All rights reserved.
+          </div>
+          
+          <div className="mt-4 pt-6 border-t border-gray-800/50 text-center">
             <p className="text-gray-600 text-xs">
-              Risk Disclaimer: Trading involves substantial risk of loss. TradeAI Pro provides educational analysis only.
+              ⚠️ Risk Disclaimer: Trading involves substantial risk of loss. TradeAI Pro provides educational analysis only and does not provide financial advice.
             </p>
           </div>
         </div>
       </footer>
+
+      {/* Legal Modals */}
+      <Dialog open={legalModal === 'privacy'} onOpenChange={() => setLegalModal(null)}>
+        <DialogContent className="max-w-3xl max-h-[85vh] bg-gray-900 border-gray-800">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-3 text-xl text-white">
+              <Shield className="h-5 w-5 text-purple-400" />
+              Privacy Policy
+            </DialogTitle>
+          </DialogHeader>
+          <ScrollArea className="h-[60vh] pr-4">
+            <div className="space-y-4 text-gray-300 text-sm">
+              <p className="text-gray-400">Last Updated: 2025</p>
+              <p>TradeAI Pro respects your privacy and is committed to protecting your personal information.</p>
+              <h4 className="text-white font-semibold">Information We Collect</h4>
+              <ul className="list-disc list-inside space-y-1">
+                <li>Email address</li>
+                <li>Account preferences</li>
+                <li>Usage analytics</li>
+                <li>Device and browser information</li>
+              </ul>
+              <h4 className="text-white font-semibold">How We Use Your Information</h4>
+              <ul className="list-disc list-inside space-y-1">
+                <li>Provide AI market analysis</li>
+                <li>Improve platform performance</li>
+                <li>Personalize user experience</li>
+                <li>Provide customer support</li>
+              </ul>
+              <h4 className="text-white font-semibold">Contact</h4>
+              <p>For questions: <a href="mailto:support@tradeaipro.com" className="text-purple-400 hover:underline">support@tradeaipro.com</a></p>
+            </div>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={legalModal === 'terms'} onOpenChange={() => setLegalModal(null)}>
+        <DialogContent className="max-w-3xl max-h-[85vh] bg-gray-900 border-gray-800">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-3 text-xl text-white">
+              <FileText className="h-5 w-5 text-cyan-400" />
+              Terms of Service
+            </DialogTitle>
+          </DialogHeader>
+          <ScrollArea className="h-[60vh] pr-4">
+            <div className="space-y-4 text-gray-300 text-sm">
+              <p>By using TradeAI Pro, you agree to the following terms.</p>
+              <h4 className="text-white font-semibold">Platform Purpose</h4>
+              <p>TradeAI Pro provides AI-powered market analysis tools for educational and informational purposes only.</p>
+              <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3">
+                <p className="text-amber-300 font-medium">⚠️ TradeAI Pro does not provide financial or investment advice.</p>
+              </div>
+              <h4 className="text-white font-semibold">User Responsibilities</h4>
+              <ul className="list-disc list-inside space-y-1">
+                <li>Users are solely responsible for their trading decisions</li>
+                <li>Do not misuse the platform</li>
+                <li>Maintain account security</li>
+              </ul>
+              <h4 className="text-white font-semibold">Limitation of Liability</h4>
+              <p>TradeAI Pro is not responsible for financial losses resulting from trading decisions made by users.</p>
+            </div>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={legalModal === 'security'} onOpenChange={() => setLegalModal(null)}>
+        <DialogContent className="max-w-3xl max-h-[85vh] bg-gray-900 border-gray-800">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-3 text-xl text-white">
+              <Lock className="h-5 w-5 text-green-400" />
+              Security Policy
+            </DialogTitle>
+          </DialogHeader>
+          <ScrollArea className="h-[60vh] pr-4">
+            <div className="space-y-4 text-gray-300 text-sm">
+              <p>TradeAI Pro prioritizes the security of our users and their data.</p>
+              <h4 className="text-white font-semibold">Data Protection</h4>
+              <ul className="list-disc list-inside space-y-1">
+                <li>AES-256 encryption for all data</li>
+                <li>TLS 1.3 for data transmission</li>
+                <li>Regular security audits</li>
+              </ul>
+              <h4 className="text-white font-semibold">Secure Infrastructure</h4>
+              <ul className="list-disc list-inside space-y-1">
+                <li>Hosted on secure cloud infrastructure</li>
+                <li>Advanced firewall protection</li>
+                <li>24/7 monitoring</li>
+              </ul>
+              <h4 className="text-white font-semibold">Security Contact</h4>
+              <p>Report vulnerabilities: <a href="mailto:security@tradeaipro.com" className="text-green-400 hover:underline">security@tradeaipro.com</a></p>
+            </div>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={legalModal === 'contact'} onOpenChange={() => setLegalModal(null)}>
+        <DialogContent className="max-w-3xl max-h-[85vh] bg-gray-900 border-gray-800">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-3 text-xl text-white">
+              <Mail className="h-5 w-5 text-blue-400" />
+              Contact Us
+            </DialogTitle>
+          </DialogHeader>
+          <ScrollArea className="h-[60vh] pr-4">
+            <div className="space-y-4 text-gray-300 text-sm">
+              <p>Our support team is here to help!</p>
+              <div className="grid gap-3">
+                <div className="bg-gray-800/50 rounded-lg p-3 border border-gray-700">
+                  <p className="text-gray-400 text-xs">Support Email</p>
+                  <a href="mailto:support@tradeaipro.com" className="text-blue-400 hover:underline">support@tradeaipro.com</a>
+                </div>
+                <div className="bg-gray-800/50 rounded-lg p-3 border border-gray-700">
+                  <p className="text-gray-400 text-xs">General Inquiries</p>
+                  <a href="mailto:info@tradeaipro.com" className="text-blue-400 hover:underline">info@tradeaipro.com</a>
+                </div>
+                <div className="bg-gray-800/50 rounded-lg p-3 border border-gray-700">
+                  <p className="text-gray-400 text-xs">Business Partnerships</p>
+                  <a href="mailto:partnerships@tradeaipro.com" className="text-blue-400 hover:underline">partnerships@tradeaipro.com</a>
+                </div>
+              </div>
+              <h4 className="text-white font-semibold">Response Time</h4>
+              <p>Our team typically responds within 24-48 hours.</p>
+            </div>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={legalModal === 'risk'} onOpenChange={() => setLegalModal(null)}>
+        <DialogContent className="max-w-3xl max-h-[85vh] bg-gray-900 border-gray-800">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-3 text-xl text-white">
+              <AlertTriangle className="h-5 w-5 text-red-400" />
+              Risk Disclaimer
+            </DialogTitle>
+          </DialogHeader>
+          <ScrollArea className="h-[60vh] pr-4">
+            <div className="space-y-4 text-gray-300 text-sm">
+              <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4">
+                <p className="text-red-300 font-medium">⚠️ Trading involves significant risk and may not be suitable for all investors.</p>
+              </div>
+              <h4 className="text-white font-semibold">Educational Purpose Only</h4>
+              <p>TradeAI Pro provides AI-powered analytical tools for educational purposes only. We do not provide financial advice.</p>
+              <h4 className="text-white font-semibold">Your Responsibility</h4>
+              <ul className="list-disc list-inside space-y-1">
+                <li>Users are solely responsible for trading decisions</li>
+                <li>Never trade with money you cannot afford to lose</li>
+                <li>Always conduct your own research</li>
+              </ul>
+              <h4 className="text-white font-semibold">No Guarantees</h4>
+              <ul className="list-disc list-inside space-y-1">
+                <li>TradeAI Pro does not guarantee profits</li>
+                <li>Past performance is not indicative of future results</li>
+                <li>Market conditions can change rapidly</li>
+              </ul>
+            </div>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
