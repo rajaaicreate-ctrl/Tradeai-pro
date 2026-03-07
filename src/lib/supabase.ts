@@ -4,13 +4,13 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
 
 // Get environment variables with proper fallback
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
 
 // Check if Supabase is properly configured
-const isConfigured = supabaseUrl && supabaseAnonKey && 
+const isConfigured = Boolean(supabaseUrl && supabaseAnonKey && 
   supabaseUrl !== 'https://demo.supabase.co' &&
-  supabaseAnonKey !== 'demo-key'
+  supabaseAnonKey !== 'demo-key')
 
 // Create a mock client for when Supabase is not configured
 class MockSupabaseClient {
@@ -40,7 +40,7 @@ class MockSupabaseClient {
 let supabaseInstance: SupabaseClient | MockSupabaseClient
 
 if (isConfigured) {
-  supabaseInstance = createClient(supabaseUrl, supabaseAnonKey, {
+  supabaseInstance = createClient(supabaseUrl as string, supabaseAnonKey as string, {
     auth: {
       persistSession: true,
       autoRefreshToken: true,
