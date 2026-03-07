@@ -48,7 +48,8 @@ import {
   PieChart,
   DollarSign,
   MessageCircle,
-  Image
+  Image,
+  Radar
 } from 'lucide-react'
 import dynamic from 'next/dynamic'
 import { supabase } from '@/lib/supabase'
@@ -69,12 +70,14 @@ const AISectorRotation = dynamic(() => import('@/components/dashboard/AISectorRo
 const AIIndianInsights = dynamic(() => import('@/components/dashboard/AIIndianInsights'), { ssr: false })
 const AIMarketCopilot = dynamic(() => import('@/components/dashboard/AIMarketCopilot'), { ssr: false })
 const AIChartAnalysis = dynamic(() => import('@/components/dashboard/AIChartAnalysis'), { ssr: false })
+const AIOpportunityRadar = dynamic(() => import('@/components/dashboard/AIOpportunityRadar'), { ssr: false })
 
 const sidebarItems = [
   { icon: LayoutDashboard, label: 'Dashboard', id: 'dashboard' },
   { icon: TrendingUp, label: 'Markets', id: 'markets' },
   { icon: TrendingUp, label: '🇮🇳 Indian Markets', id: 'indian-markets' },
   { icon: Zap, label: 'Scanner', id: 'scanner' },
+  { icon: Radar, label: 'Radar', id: 'radar' },
   { icon: BarChart3, label: 'Backtest', id: 'backtest' },
   { icon: Wallet, label: 'Portfolio', id: 'portfolio' },
   { icon: Brain, label: 'AI Insights', id: 'insights' },
@@ -1553,6 +1556,9 @@ export default function Home() {
             </div>
           </div>
         )
+
+      case 'radar':
+        return <AIOpportunityRadar />
 
       case 'ai-copilot':
         return (
