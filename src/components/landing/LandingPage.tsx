@@ -239,6 +239,15 @@ function PriceTicker() {
 
 // AI Visualization
 function AIVisualization() {
+  const orbitIcons = [
+    { Icon: TrendingUp, color: 'bg-purple-500/20 border-purple-500/50' },
+    { Icon: BarChart3, color: 'bg-cyan-500/20 border-cyan-500/50' },
+    { Icon: Zap, color: 'bg-pink-500/20 border-pink-500/50' },
+    { Icon: Target, color: 'bg-purple-500/20 border-purple-500/50' },
+    { Icon: Radar, color: 'bg-cyan-500/20 border-cyan-500/50' },
+    { Icon: Gauge, color: 'bg-pink-500/20 border-pink-500/50' },
+  ]
+  
   return (
     <div className="relative w-full h-64 md:h-80">
       {/* Central Brain */}
@@ -250,24 +259,23 @@ function AIVisualization() {
       </div>
       
       {/* Orbiting Nodes */}
-      {[0, 60, 120, 180, 240, 300].map((angle, idx) => (
-        <div
-          key={idx}
-          className="absolute left-1/2 top-1/2 w-8 h-8 -ml-4 -mt-4"
-          style={{
-            transform: `rotate(${angle}deg) translateX(100px) rotate(-${angle}deg)`,
-            animation: `orbit ${10 + idx}s linear infinite`,
-          }}
-        >
-          <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-            idx % 3 === 0 ? 'bg-purple-500/20 border-purple-500/50' :
-            idx % 3 === 1 ? 'bg-cyan-500/20 border-cyan-500/50' :
-            'bg-pink-500/20 border-pink-500/50'
-          } border backdrop-blur-sm`}>
-            {[TrendingUp, BarChart3, Zap, Target, Radar, Gauge][idx]({ className: 'w-4 h-4 text-white' })}
+      {[0, 60, 120, 180, 240, 300].map((angle, idx) => {
+        const { Icon, color } = orbitIcons[idx]
+        return (
+          <div
+            key={idx}
+            className="absolute left-1/2 top-1/2 w-8 h-8 -ml-4 -mt-4"
+            style={{
+              transform: `rotate(${angle}deg) translateX(100px) rotate(-${angle}deg)`,
+              animation: `orbit ${10 + idx}s linear infinite`,
+            }}
+          >
+            <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${color} border backdrop-blur-sm`}>
+              <Icon className="w-4 h-4 text-white" />
+            </div>
           </div>
-        </div>
-      ))}
+        )
+      })}
       
       {/* Connection Lines */}
       <svg className="absolute inset-0 w-full h-full" style={{ opacity: 0.3 }}>
