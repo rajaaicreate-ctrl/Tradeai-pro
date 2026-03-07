@@ -109,7 +109,31 @@ export default function Home() {
   const [authView, setAuthView] = useState<'login' | 'signup' | 'admin'>('login')
   const [isAdmin, setIsAdmin] = useState(false)
   const [adminMode, setAdminMode] = useState(false)
-  
+
+  // Admin Live Data states
+  const [adminStats, setAdminStats] = useState({
+    totalUsers: 0,
+    activeUsers: 0,
+    proUsers: 0,
+    enterpriseUsers: 0,
+    freeUsers: 0,
+    totalRevenue: 0,
+    monthlyGrowth: '0',
+    apiCalls: 0,
+    systemHealth: 99.8,
+    planDistribution: {
+      free: { count: 0, percent: '0' },
+      pro: { count: 0, percent: '0' },
+      enterprise: { count: 0, percent: '0' }
+    },
+    activeAlerts: 0,
+    totalTrades: 0,
+    totalPnl: 0,
+    source: 'loading'
+  })
+  const [adminUsers, setAdminUsers] = useState<any[]>([])
+  const [adminLoading, setAdminLoading] = useState(false)
+
   // AI Data states
   const [aiInsights, setAiInsights] = useState<any[]>([])
   const [coachingTips, setCoachingTips] = useState<any[]>([])
@@ -136,6 +160,38 @@ export default function Home() {
       }
     }
   }, [])
+
+  // Fetch admin stats when in admin mode
+  useEffect(() => {
+    if (!adminMode) return
+
+    const fetchAdminData = async () => {
+      setAdminLoading(true)
+      try {
+        const adminKey = 'TradeAI@2024Admin#Secret'
+
+        // Fetch stats
+        const statsRes = await fetch(`/api/admin/stats?key=${adminKey}`)
+        if (statsRes.ok) {
+          const statsData = await statsRes.json()
+          if (statsData.success) {
+            setAdminStats(statsData.data)
+            setAdminUsers(statsData.data.recentUsers || [])
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch admin data:', error)
+      } finally {
+        setAdminLoading(false)
+      }
+    }
+
+    fetchAdminData()
+
+    // Refresh every 30 seconds
+    const interval = setInterval(fetchAdminData, 30000)
+    return () => clearInterval(interval)
+  }, [adminMode])
 
   // Check auth state
   useEffect(() => {
@@ -416,26 +472,6 @@ export default function Home() {
     { id: 3, type: 'pattern', symbol: 'XAU/USD', condition: 'Double Bottom', status: 'active', triggered: false },
   ]
 
-  // Admin mock data
-  const adminStats = {
-    totalUsers: 1247,
-    activeUsers: 892,
-    proUsers: 234,
-    enterpriseUsers: 45,
-    totalRevenue: 45670,
-    monthlyGrowth: 12.5,
-    apiCalls: 89432,
-    systemHealth: 99.8
-  }
-
-  const recentUsers = [
-    { id: 1, email: 'user1@gmail.com', name: 'John Doe', plan: 'pro', joined: '2024-01-15', status: 'active' },
-    { id: 2, email: 'user2@gmail.com', name: 'Jane Smith', plan: 'free', joined: '2024-01-14', status: 'active' },
-    { id: 3, email: 'user3@gmail.com', name: 'Mike Johnson', plan: 'enterprise', joined: '2024-01-13', status: 'active' },
-    { id: 4, email: 'user4@gmail.com', name: 'Sarah Wilson', plan: 'pro', joined: '2024-01-12', status: 'inactive' },
-    { id: 5, email: 'user5@gmail.com', name: 'Tom Brown', plan: 'free', joined: '2024-01-11', status: 'active' },
-  ]
-
   // Render admin content
   const renderAdminContent = () => {
     switch (activeSection) {
@@ -446,12 +482,25 @@ export default function Home() {
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-2xl font-bold text-white">Admin Dashboard</h2>
-                <p className="text-gray-400">Welcome back, Admin! Here's your platform overview.</p>
+                <p className="text-gray-400">
+                  Welcome back, Admin! Here's your platform overview.
+                  {adminStats.source === 'live' && (
+                    <span className="ml-2 text-green-400 text-sm">● Live Data</span>
+                  )}
+                  {adminStats.source === 'fallback' && (
+                    <span className="ml-2 text-yellow-400 text-sm">● Demo Data</span>
+                  )}
+                </p>
               </div>
-              <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30 text-sm px-4 py-2">
-                <Shield className="h-4 w-4 mr-2" />
-                Admin Access
-              </Badge>
+              <div className="flex items-center gap-2">
+                {adminLoading && (
+                  <div className="w-4 h-4 border-2 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+                )}
+                <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30 text-sm px-4 py-2">
+                  <Shield className="h-4 w-4 mr-2" />
+                  Admin Access
+                </Badge>
+              </div>
             </div>
 
             {/* Stats Grid */}
@@ -524,9 +573,11 @@ export default function Home() {
                   <CardTitle className="text-white text-lg">Free Users</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-4xl font-bold text-gray-400">{adminStats.totalUsers - adminStats.proUsers - adminStats.enterpriseUsers}</div>
-                  <Progress value={((adminStats.totalUsers - adminStats.proUsers - adminStats.enterpriseUsers) / adminStats.totalUsers) * 100} className="h-2 mt-4" />
-                  <p className="text-gray-500 text-sm mt-2">77.4% of total users</p>
+                  <div className="text-4xl font-bold text-gray-400">
+                    {adminStats.freeUsers || (adminStats.totalUsers - adminStats.proUsers - adminStats.enterpriseUsers)}
+                  </div>
+                  <Progress value={parseFloat(adminStats.planDistribution?.free?.percent || '0')} className="h-2 mt-4" />
+                  <p className="text-gray-500 text-sm mt-2">{adminStats.planDistribution?.free?.percent || '0'}% of total users</p>
                 </CardContent>
               </Card>
 
@@ -536,8 +587,8 @@ export default function Home() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-4xl font-bold text-purple-400">{adminStats.proUsers}</div>
-                  <Progress value={(adminStats.proUsers / adminStats.totalUsers) * 100} className="h-2 mt-4" />
-                  <p className="text-gray-500 text-sm mt-2">18.8% of total users</p>
+                  <Progress value={parseFloat(adminStats.planDistribution?.pro?.percent || '0')} className="h-2 mt-4" />
+                  <p className="text-gray-500 text-sm mt-2">{adminStats.planDistribution?.pro?.percent || '0'}% of total users</p>
                 </CardContent>
               </Card>
 
@@ -547,8 +598,8 @@ export default function Home() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-4xl font-bold text-cyan-400">{adminStats.enterpriseUsers}</div>
-                  <Progress value={(adminStats.enterpriseUsers / adminStats.totalUsers) * 100} className="h-2 mt-4" />
-                  <p className="text-gray-500 text-sm mt-2">3.6% of total users</p>
+                  <Progress value={parseFloat(adminStats.planDistribution?.enterprise?.percent || '0')} className="h-2 mt-4" />
+                  <p className="text-gray-500 text-sm mt-2">{adminStats.planDistribution?.enterprise?.percent || '0'}% of total users</p>
                 </CardContent>
               </Card>
             </div>
@@ -617,7 +668,23 @@ export default function Home() {
                       </tr>
                     </thead>
                     <tbody>
-                      {recentUsers.map((u) => (
+                      {adminLoading ? (
+                        <tr>
+                          <td colSpan={6} className="p-8 text-center text-gray-400">
+                            <div className="flex items-center justify-center gap-2">
+                              <div className="w-4 h-4 border-2 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+                              Loading live data...
+                            </div>
+                          </td>
+                        </tr>
+                      ) : adminUsers.length === 0 ? (
+                        <tr>
+                          <td colSpan={6} className="p-8 text-center text-gray-400">
+                            No users found. Database may be empty or connection issue.
+                          </td>
+                        </tr>
+                      ) : (
+                        adminUsers.map((u) => (
                         <tr key={u.id} className="border-t border-gray-800 hover:bg-gray-800/30">
                           <td className="p-4">
                             <div className="flex items-center gap-3">
@@ -650,7 +717,8 @@ export default function Home() {
                             </div>
                           </td>
                         </tr>
-                      ))}
+                      ))
+                      )}
                     </tbody>
                   </table>
                 </div>
