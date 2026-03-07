@@ -56,6 +56,7 @@ import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 import LoginPage from '@/components/auth/LoginPage'
 import SignUpPage from '@/components/auth/SignUpPage'
 import AdminLoginPage from '@/components/auth/AdminLoginPage'
+import LandingPage from '@/components/landing/LandingPage'
 
 // Dynamic imports with error handling
 const loadComponent = (importFn: () => Promise<any>) => 
@@ -125,7 +126,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true)
   const [user, setUser] = useState<any>(null)
   const [profile, setProfile] = useState<UserProfile | null>(null)
-  const [authView, setAuthView] = useState<'login' | 'signup' | 'admin'>('login')
+  const [authView, setAuthView] = useState<'landing' | 'login' | 'signup' | 'admin'>('landing')
   const [isAdmin, setIsAdmin] = useState(false)
   const [adminMode, setAdminMode] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -491,12 +492,20 @@ export default function Home() {
           onSuccess={() => setAuthView('login')}
         />
       )
-    } else {
+    } else if (authView === 'login') {
       return (
         <LoginPage
           onSwitchToSignUp={() => setAuthView('signup')}
           onSwitchToAdmin={() => setAuthView('admin')}
           onSuccess={() => {}}
+        />
+      )
+    } else {
+      // Landing page (default)
+      return (
+        <LandingPage
+          onLogin={() => setAuthView('login')}
+          onSignUp={() => setAuthView('signup')}
         />
       )
     }
