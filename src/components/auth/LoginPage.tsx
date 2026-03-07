@@ -24,8 +24,15 @@ export default function LoginPage({ onSwitchToSignUp, onSwitchToAdmin, onSuccess
     setError('')
 
     try {
-      // Direct supabase call since we can't use hooks in event handlers
-      const { supabase } = await import('@/lib/supabase')
+      // Check if Supabase is configured
+      const { supabase, isSupabaseConfigured } = await import('@/lib/supabase')
+      
+      if (!supabase || !isSupabaseConfigured) {
+        setError('Authentication is not configured. Please use Admin Portal to access the platform.')
+        setLoading(false)
+        return
+      }
+      
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password

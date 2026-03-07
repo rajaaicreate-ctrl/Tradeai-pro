@@ -222,6 +222,12 @@ export default function Home() {
         return
       }
       
+      // Skip if Supabase not configured
+      if (!supabase) {
+        setLoading(false)
+        return
+      }
+      
       try {
         const sessionPromise = supabase.auth.getSession()
         const timeoutPromise = new Promise((_, reject) => 
@@ -254,28 +260,34 @@ export default function Home() {
     
     checkAuth()
     
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (!mounted) return
-      setUser(session?.user ?? null)
+    if (supabase) {
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+        if (!mounted) return
+        setUser(session?.user ?? null)
+        
+        // Check if admin
+        if (session?.user?.email && ADMIN_EMAILS.includes(session.user.email.toLowerCase())) {
+          setIsAdmin(true)
+        } else {
+          setIsAdmin(false)
+        }
+        
+        if (session?.user) {
+          fetchProfile(session.user.id)
+        } else {
+          setProfile(null)
+          setLoading(false)
+        }
+      })
       
-      // Check if admin
-      if (session?.user?.email && ADMIN_EMAILS.includes(session.user.email.toLowerCase())) {
-        setIsAdmin(true)
-      } else {
-        setIsAdmin(false)
+      return () => {
+        mounted = false
+        subscription.unsubscribe()
       }
-      
-      if (session?.user) {
-        fetchProfile(session.user.id)
-      } else {
-        setProfile(null)
-        setLoading(false)
-      }
-    })
+    }
     
     return () => {
       mounted = false
-      subscription.unsubscribe()
     }
   }, [])
 
@@ -287,6 +299,11 @@ export default function Home() {
 
   // Fetch user profile
   const fetchProfile = async (userId: string) => {
+    if (!supabase) {
+      setLoading(false)
+      return
+    }
+    
     try {
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), 5000)
@@ -391,7 +408,9 @@ export default function Home() {
       document.cookie = 'admin_mode=; path=/; max-age=0'
     }
     
-    await supabase.auth.signOut()
+    if (supabase) {
+      await supabase.auth.signOut()
+    }
     setUser(null)
     setProfile(null)
     setIsAdmin(false)
