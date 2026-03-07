@@ -7,28 +7,25 @@ import { AlertTriangle, RefreshCw, Home } from 'lucide-react'
 
 interface Props {
   children: ReactNode
-  fallback?: ReactNode
 }
 
 interface State {
   hasError: boolean
   error: Error | null
-  errorInfo: any
 }
 
 export class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
     super(props)
-    this.state = { hasError: false, error: null, errorInfo: null }
+    this.state = { hasError: false, error: null }
   }
 
   static getDerivedStateFromError(error: Error): State {
-    return { hasError: true, error, errorInfo: null }
+    return { hasError: true, error }
   }
 
   componentDidCatch(error: Error, errorInfo: any) {
     console.error('ErrorBoundary caught an error:', error, errorInfo)
-    this.setState({ errorInfo })
   }
 
   handleRefresh = () => {
@@ -41,10 +38,6 @@ export class ErrorBoundary extends Component<Props, State> {
 
   render() {
     if (this.state.hasError) {
-      if (this.props.fallback) {
-        return this.props.fallback
-      }
-
       return (
         <div className="min-h-screen bg-gray-950 flex items-center justify-center p-4">
           <Card className="bg-gray-900/50 border-gray-800 max-w-lg w-full">
@@ -56,13 +49,6 @@ export class ErrorBoundary extends Component<Props, State> {
               <p className="text-gray-400 mb-4">
                 An error occurred while loading the application.
               </p>
-              {process.env.NODE_ENV === 'development' && this.state.error && (
-                <div className="bg-gray-800 p-3 rounded-lg mb-4 text-left overflow-auto max-h-32">
-                  <p className="text-red-400 text-xs font-mono">
-                    {this.state.error.message}
-                  </p>
-                </div>
-              )}
               <div className="flex gap-3 justify-center">
                 <Button
                   onClick={this.handleRefresh}
@@ -88,12 +74,4 @@ export class ErrorBoundary extends Component<Props, State> {
 
     return this.props.children
   }
-}
-
-// Hook for functional components to trigger error boundary
-export function useErrorBoundary() {
-  const throwError = (error: Error) => {
-    throw error
-  }
-  return throwError
 }
