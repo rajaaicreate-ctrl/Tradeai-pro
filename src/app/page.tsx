@@ -57,6 +57,7 @@ import LoginPage from '@/components/auth/LoginPage'
 import SignUpPage from '@/components/auth/SignUpPage'
 import AdminLoginPage from '@/components/auth/AdminLoginPage'
 import LandingPage from '@/components/landing/LandingPage'
+import LegalPages from '@/components/legal/LegalPages'
 
 // Dynamic imports with error handling
 const loadComponent = (importFn: () => Promise<any>) => 
@@ -1816,6 +1817,7 @@ export default function Home() {
           <div className="p-6">
             {isAdmin ? renderAdminContent() : renderContent()}
           </div>
+          <LegalPages />
         </ScrollArea>
       </main>
     </div>
