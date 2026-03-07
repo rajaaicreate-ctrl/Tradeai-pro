@@ -153,9 +153,9 @@ export default function Home() {
   useEffect(() => {
     // Check if admin session exists
     if (typeof window !== 'undefined') {
-      const adminSession = localStorage.getItem('admin_session')
-      if (adminSession) {
-        try {
+      try {
+        const adminSession = localStorage.getItem('admin_session')
+        if (adminSession) {
           const session = JSON.parse(adminSession)
           if (session.isAdmin) {
             setAdminMode(true)
@@ -163,11 +163,12 @@ export default function Home() {
             setLoading(false)
             return
           }
-        } catch (e) {
-          localStorage.removeItem('admin_session')
         }
+      } catch (e) {
+        // Ignore errors
       }
     }
+    // If no admin session, just continue (don't set loading false here, auth check will do it)
   }, [])
 
   // Initialize current time on client side
@@ -216,25 +217,19 @@ export default function Home() {
     let mounted = true
     
     const checkAuth = async () => {
-      // Skip if admin mode
+      // Skip if admin mode (already handled above)
       if (adminMode) {
-        setLoading(false)
         return
       }
       
-      // Skip if Supabase not configured
+      // If Supabase not configured, just finish loading
       if (!supabase) {
-        setLoading(false)
+        if (mounted) setLoading(false)
         return
       }
       
       try {
-        const sessionPromise = supabase.auth.getSession()
-        const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Session timeout')), 5000)
-        )
-        
-        const { data: { session } } = await Promise.race([sessionPromise, timeoutPromise]) as any
+        const { data: { session } } = await supabase.auth.getSession()
         
         if (!mounted) return
         
@@ -258,43 +253,21 @@ export default function Home() {
       }
     }
     
-    checkAuth()
-    
-    if (supabase) {
-      const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-        if (!mounted) return
-        setUser(session?.user ?? null)
-        
-        // Check if admin
-        if (session?.user?.email && ADMIN_EMAILS.includes(session.user.email.toLowerCase())) {
-          setIsAdmin(true)
-        } else {
-          setIsAdmin(false)
-        }
-        
-        if (session?.user) {
-          fetchProfile(session.user.id)
-        } else {
-          setProfile(null)
-          setLoading(false)
-        }
-      })
-      
-      return () => {
-        mounted = false
-        subscription.unsubscribe()
-      }
-    }
+    // Small delay to let admin check complete first
+    const timer = setTimeout(checkAuth, 100)
     
     return () => {
       mounted = false
+      clearTimeout(timer)
     }
-  }, [])
+  }, [adminMode])
 
-  // Update time
+  // Fallback: ensure loading ends after 3 seconds max
   useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(new Date()), 1000)
-    return () => clearInterval(timer)
+    const fallback = setTimeout(() => {
+      setLoading(false)
+    }, 3000)
+    return () => clearTimeout(fallback)
   }, [])
 
   // Fetch user profile
