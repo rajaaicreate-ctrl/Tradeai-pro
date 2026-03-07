@@ -49,11 +49,11 @@ export default function AIMarketCopilot({ className }: CopilotProps) {
   const inputRef = useRef<HTMLInputElement>(null)
 
   const suggestedQuestions = [
-    "Is BTC bullish today?",
-    "Where is support for EURUSD?",
-    "Is NIFTY trending up?",
-    "What is the outlook for Gold?",
-    "Analyze TSLA trend"
+    "How is the crypto market today?",
+    "Is BTC bullish?",
+    "Indian stocks outlook",
+    "What is the trend for Gold?",
+    "Forex market analysis"
   ]
 
   useEffect(() => {
@@ -78,10 +78,19 @@ export default function AIMarketCopilot({ className }: CopilotProps) {
     setLoading(true)
 
     try {
+      // Build conversation history for context (last 10 messages)
+      const conversationHistory = messages.slice(-10).map(m => ({
+        role: m.role,
+        content: m.content
+      }))
+      
       const response = await fetch('/api/ai/copilot', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question: query })
+        body: JSON.stringify({ 
+          question: query,
+          history: conversationHistory
+        })
       })
 
       const data = await response.json()

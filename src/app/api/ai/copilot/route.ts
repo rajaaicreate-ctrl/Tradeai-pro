@@ -254,10 +254,20 @@ async function generateAIInsight(
   type: string,
   intent: string,
   marketData: any,
-  question: string
+  question: string,
+  history?: any[]
 ): Promise<string> {
   try {
     const zai = await ZAI.create()
+    
+    // Build conversation context if available
+    let conversationContext = ''
+    if (history && history.length > 1) {
+      const recentHistory = history.slice(-4)
+      conversationContext = '\n\nRecent conversation:\n' + recentHistory.map((m: any) => 
+        `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content.substring(0, 200)}`
+      ).join('\n')
+    }
     
     const prompt = `You are a professional market analyst for TradeAI Pro. Analyze the following market data and provide a concise, actionable insight.
 
@@ -272,18 +282,19 @@ SMA 50: ${marketData.sma50.toFixed(2)}
 Support Level: ${marketData.support.toFixed(2)}
 Resistance Level: ${marketData.resistance.toFixed(2)}
 Volume Trend: ${marketData.volumeTrend}
+${conversationContext}
 
 User Question: ${question}
 
-Provide a brief, professional market insight (2-3 sentences) addressing the user's question. Focus on key levels, momentum, and potential scenarios. Do NOT give financial advice. Keep it educational.`
+Provide a brief, professional market insight (2-3 sentences) addressing the user's question. Focus on key levels, momentum, and potential scenarios. Do NOT give financial advice. Keep it educational. Be conversational if this is a follow-up question.`
 
     const completion = await zai.chat.completions.create({
       messages: [
-        { role: 'system', content: 'You are a professional market analyst providing educational market insights.' },
+        { role: 'system', content: 'You are a professional market analyst providing educational market insights. Be conversational and helpful.' },
         { role: 'user', content: prompt }
       ],
       temperature: 0.7,
-      max_tokens: 150
+      max_tokens: 200
     })
     
     return completion.choices[0]?.message?.content || generateFallbackInsight(asset, marketData, intent)
@@ -318,7 +329,7 @@ function generateFallbackInsight(asset: string, marketData: any, intent: string)
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { question, sessionId } = body
+    const { question, sessionId, history } = body
     
     if (!question) {
       return NextResponse.json({
@@ -327,12 +338,56 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
     
+    // Check if this is a follow-up question based on conversation history
+    const isFollowUp = history && history.length > 1
+    let contextAsset: string | null = null
+    
+    // If follow-up, try to find context from previous messages
+    if (isFollowUp) {
+      // Look for mentioned assets in recent assistant messages
+      const recentAssistantMessages = history
+        .filter((m: any) => m.role === 'assistant')
+        .slice(-3)
+      
+      for (const msg of recentAssistantMessages) {
+        const content = msg.content.toLowerCase()
+        // Check for specific asset mentions in previous responses
+        for (const [key, data] of Object.entries(ASSET_PATTERNS)) {
+          if (content.includes(data.name.toLowerCase()) || content.includes(key.toLowerCase())) {
+            contextAsset = data.name
+            break
+          }
+        }
+        if (contextAsset) break
+      }
+    }
+    
     // Detect asset from question
-    const assetDetection = detectAsset(question)
+    let assetDetection = detectAsset(question)
+    
+    // Check for follow-up pronouns that reference previous context
+    const lowerQuestion = question.toLowerCase()
+    const followUpIndicators = ['it', 'that', 'this', 'the same', 'what about', 'how about', 'and', 'also']
+    const isFollowUpQuestion = followUpIndicators.some(indicator => 
+      lowerQuestion.startsWith(indicator + ' ') || 
+      lowerQuestion.includes('is ' + indicator + ' ') ||
+      lowerQuestion.includes('was ' + indicator + ' ') ||
+      lowerQuestion.includes('will ' + indicator + ' ')
+    )
+    
+    // If it's a follow-up question and we have context, use the context asset
+    if (!assetDetection && isFollowUpQuestion && contextAsset) {
+      // Find the asset data for the context asset
+      for (const [key, data] of Object.entries(ASSET_PATTERNS)) {
+        if (data.name === contextAsset) {
+          assetDetection = { asset: data.name, type: data.type }
+          break
+        }
+      }
+    }
     
     // If no specific asset, check for market category
     if (!assetDetection) {
-      const lowerQuestion = question.toLowerCase()
       
       // Check for market category
       for (const [key, category] of Object.entries(MARKET_CATEGORIES)) {
@@ -446,7 +501,7 @@ export async function POST(request: NextRequest) {
     const confidence = calculateConfidence(marketData, intent)
     
     // Generate AI insight
-    const insight = await generateAIInsight(asset, type, intent, marketData, question)
+    const insight = await generateAIInsight(asset, type, intent, marketData, question, history)
     
     // Generate suggested follow-up questions
     const suggestedQuestions = [
