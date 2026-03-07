@@ -22,7 +22,6 @@ import {
   X,
   Radar,
   Users,
-  DollarSign,
   Activity,
   Bot,
   Database,
@@ -32,13 +31,13 @@ import {
   Cpu,
   Network,
   Gauge,
-  CandlestickChart,
-  MoveRight,
-  Star,
-  Eye,
-  Lock,
   Rocket,
-  Award
+  Award,
+  MessageCircle,
+  Clock,
+  Star,
+  ArrowUpRight,
+  Lock
 } from 'lucide-react'
 
 interface LandingPageProps {
@@ -82,54 +81,6 @@ function Particle({ delay, duration, size, left, top }: { delay: number; duratio
         left: `${left}%`,
         top: `${top}%`,
         animation: `float ${duration}s ease-in-out ${delay}s infinite`,
-      }}
-    />
-  )
-}
-
-// Animated chart line
-function AnimatedChartLine() {
-  return (
-    <svg className="absolute inset-0 w-full h-full" viewBox="0 0 400 100" preserveAspectRatio="none">
-      <defs>
-        <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%" stopColor="#8B5CF6" stopOpacity="0" />
-          <stop offset="50%" stopColor="#8B5CF6" stopOpacity="1" />
-          <stop offset="100%" stopColor="#06B6D4" stopOpacity="1" />
-        </linearGradient>
-        <linearGradient id="areaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor="#8B5CF6" stopOpacity="0.3" />
-          <stop offset="100%" stopColor="#8B5CF6" stopOpacity="0" />
-        </linearGradient>
-      </defs>
-      <path
-        d="M0,80 Q50,60 100,70 T200,40 T300,60 T400,20"
-        fill="none"
-        stroke="url(#lineGradient)"
-        strokeWidth="2"
-        className="animate-dash"
-        style={{ strokeDasharray: '500', strokeDashoffset: '500', animation: 'dash 3s ease-out forwards' }}
-      />
-      <path
-        d="M0,80 Q50,60 100,70 T200,40 T300,60 T400,20 V100 H0 Z"
-        fill="url(#areaGradient)"
-        className="animate-fade-in"
-        style={{ animation: 'fadeIn 2s ease-out forwards', animationDelay: '1s', opacity: 0 }}
-      />
-    </svg>
-  )
-}
-
-// Neural network node
-function NeuralNode({ x, y, delay }: { x: number; y: number; delay: number }) {
-  return (
-    <div
-      className="absolute w-3 h-3 rounded-full bg-gradient-to-r from-purple-500 to-cyan-500 animate-pulse"
-      style={{
-        left: `${x}%`,
-        top: `${y}%`,
-        animationDelay: `${delay}s`,
-        boxShadow: '0 0 20px rgba(139, 92, 246, 0.5)',
       }}
     />
   )
@@ -221,7 +172,7 @@ function PriceTicker() {
       {prices.map((item, idx) => (
         <div
           key={idx}
-          className="flex items-center gap-3 bg-gray-900/60 backdrop-blur-xl rounded-xl px-5 py-3 border border-gray-700/50 hover:border-purple-500/50 transition-all duration-300 hover:scale-105"
+          className="flex items-center gap-3 bg-gray-900/60 backdrop-blur-xl rounded-xl px-5 py-3 border border-gray-700/50 hover:border-purple-500/50 transition-all duration-300 hover:scale-105 cursor-pointer"
         >
           <div className={`w-2 h-2 rounded-full ${item.trend === 'up' ? 'bg-green-400' : 'bg-red-400'} animate-pulse`} />
           <span className="text-white font-semibold">{item.symbol}</span>
@@ -289,7 +240,6 @@ function AIVisualization() {
             stroke="url(#gradient)"
             strokeWidth="1"
             strokeDasharray="4 4"
-            className="animate-dash"
           />
         ))}
         <defs>
@@ -320,7 +270,7 @@ function AnimatedStats() {
   const users = useCounter(12847, 2500, isVisible)
   const analysis = useCounter(2456000, 3000, isVisible)
   const accuracy = useCounter(94, 2000, isVisible)
-  const uptime = useCounter(99.9, 2000, isVisible)
+  const uptime = useCounter(99, 2000, isVisible)
   
   return (
     <div ref={ref} className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
@@ -328,7 +278,7 @@ function AnimatedStats() {
         { value: users.toLocaleString(), label: 'Active Traders', icon: Users, suffix: '+' },
         { value: analysis.toLocaleString(), label: 'AI Analyses', icon: Activity, suffix: '+' },
         { value: accuracy, label: 'Accuracy Rate', icon: Target, suffix: '%' },
-        { value: uptime.toFixed(1), label: 'Uptime', icon: Gauge, suffix: '%' },
+        { value: uptime, label: 'Uptime', icon: Gauge, suffix: '.9%' },
       ].map((stat, idx) => (
         <div key={idx} className="text-center group">
           <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500/20 to-cyan-500/20 border border-purple-500/20 mb-4 group-hover:scale-110 transition-transform duration-300">
@@ -363,6 +313,15 @@ export default function LandingPage({ onLogin, onSignUp }: LandingPageProps) {
       window.removeEventListener('scroll', handleScroll)
     }
   }, [])
+
+  // Smooth scroll to section
+  const scrollToSection = (sectionId: string) => {
+    setMobileMenuOpen(false)
+    const element = document.getElementById(sectionId)
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }
 
   const features = [
     {
@@ -442,6 +401,13 @@ export default function LandingPage({ onLogin, onSignUp }: LandingPageProps) {
     }
   ]
 
+  const navItems = [
+    { label: 'Features', id: 'features' },
+    { label: 'Technology', id: 'technology' },
+    { label: 'Pricing', id: 'pricing' },
+    { label: 'About', id: 'about' },
+  ]
+
   return (
     <div className="min-h-screen bg-gray-950 text-white overflow-x-hidden">
       {/* Global Styles */}
@@ -451,12 +417,6 @@ export default function LandingPage({ onLogin, onSignUp }: LandingPageProps) {
           25% { transform: translateY(-20px) translateX(10px); }
           50% { transform: translateY(-10px) translateX(-10px); }
           75% { transform: translateY(-30px) translateX(5px); }
-        }
-        @keyframes dash {
-          to { stroke-dashoffset: 0; }
-        }
-        @keyframes fadeIn {
-          to { opacity: 1; }
         }
         @keyframes orbit {
           from { transform: rotate(0deg) translateX(100px) rotate(0deg); }
@@ -474,6 +434,7 @@ export default function LandingPage({ onLogin, onSignUp }: LandingPageProps) {
           0%, 100% { box-shadow: 0 0 20px rgba(139, 92, 246, 0.5); }
           50% { box-shadow: 0 0 40px rgba(139, 92, 246, 0.8), 0 0 60px rgba(6, 182, 212, 0.5); }
         }
+        html { scroll-behavior: smooth; }
         .animate-gradient {
           background-size: 200% 200%;
           animation: gradient-shift 5s ease infinite;
@@ -487,16 +448,11 @@ export default function LandingPage({ onLogin, onSignUp }: LandingPageProps) {
       `}</style>
 
       {/* Animated Background */}
-      <div className="fixed inset-0 z-0 overflow-hidden">
-        {/* Gradient Mesh Background */}
+      <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
         <div className="absolute inset-0 bg-gradient-to-br from-gray-950 via-purple-950/20 to-gray-950" />
-        
-        {/* Glowing Orbs */}
         <GlowingOrb color="#8B5CF6" size={600} position={{ x: '-10%', y: '10%' }} />
         <GlowingOrb color="#06B6D4" size={500} position={{ x: '80%', y: '60%' }} />
         <GlowingOrb color="#EC4899" size={400} position={{ x: '50%', y: '80%' }} />
-        
-        {/* Floating Particles */}
         {[...Array(20)].map((_, i) => (
           <Particle 
             key={i} 
@@ -507,22 +463,6 @@ export default function LandingPage({ onLogin, onSignUp }: LandingPageProps) {
             top={(i * 7 + 10) % 100}
           />
         ))}
-        
-        {/* Grid Pattern */}
-        <div 
-          className="absolute inset-0 opacity-10"
-          style={{
-            backgroundImage: `linear-gradient(rgba(139, 92, 246, 0.3) 1px, transparent 1px),
-                             linear-gradient(90deg, rgba(139, 92, 246, 0.3) 1px, transparent 1px)`,
-            backgroundSize: '50px 50px',
-            transform: `translateY(${scrollY * 0.1}px)`,
-          }}
-        />
-        
-        {/* Animated Chart Lines */}
-        <div className="absolute bottom-0 left-0 right-0 h-64 opacity-20">
-          <AnimatedChartLine />
-        </div>
       </div>
 
       {/* Navigation */}
@@ -532,7 +472,7 @@ export default function LandingPage({ onLogin, onSignUp }: LandingPageProps) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-20">
             {/* Logo */}
-            <div className="flex items-center gap-3">
+            <button onClick={() => scrollToSection('hero')} className="flex items-center gap-3 cursor-pointer">
               <div className="relative w-12 h-12">
                 <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-purple-500 to-cyan-500 animate-gradient opacity-50 blur-lg" />
                 <div className="relative w-12 h-12 rounded-xl bg-gradient-to-r from-purple-500 to-cyan-500 flex items-center justify-center animate-glow">
@@ -545,29 +485,29 @@ export default function LandingPage({ onLogin, onSignUp }: LandingPageProps) {
                 </span>
                 <div className="text-[10px] text-cyan-400/60 tracking-widest">QUANTUM INTELLIGENCE</div>
               </div>
-            </div>
+            </button>
 
             {/* Desktop Navigation */}
             <div className="hidden lg:flex items-center gap-1">
-              {['Features', 'Technology', 'Pricing', 'About'].map((item) => (
-                <a
-                  key={item}
-                  href={`#${item.toLowerCase()}`}
-                  className="px-4 py-2 text-gray-400 hover:text-white transition-colors rounded-lg hover:bg-white/5"
+              {navItems.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => scrollToSection(item.id)}
+                  className="px-4 py-2 text-gray-400 hover:text-white transition-colors rounded-lg hover:bg-white/5 cursor-pointer"
                 >
-                  {item}
-                </a>
+                  {item.label}
+                </button>
               ))}
             </div>
 
             {/* Auth Buttons */}
             <div className="hidden md:flex items-center gap-4">
-              <Button variant="ghost" onClick={onLogin} className="text-gray-300 hover:text-white hover:bg-white/5">
+              <Button variant="ghost" onClick={onLogin} className="text-gray-300 hover:text-white hover:bg-white/5 cursor-pointer">
                 Sign In
               </Button>
               <Button 
                 onClick={onSignUp}
-                className="relative group bg-gradient-to-r from-purple-500 to-cyan-500 hover:from-purple-600 hover:to-cyan-600 px-6 py-2.5 overflow-hidden"
+                className="relative group bg-gradient-to-r from-purple-500 to-cyan-500 hover:from-purple-600 hover:to-cyan-600 px-6 py-2.5 overflow-hidden cursor-pointer"
               >
                 <span className="relative z-10 flex items-center gap-2">
                   Launch App
@@ -579,7 +519,7 @@ export default function LandingPage({ onLogin, onSignUp }: LandingPageProps) {
 
             {/* Mobile Menu Button */}
             <button
-              className="lg:hidden p-2 text-gray-400 hover:text-white"
+              className="lg:hidden p-2 text-gray-400 hover:text-white cursor-pointer"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
               {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -591,14 +531,18 @@ export default function LandingPage({ onLogin, onSignUp }: LandingPageProps) {
         {mobileMenuOpen && (
           <div className="lg:hidden bg-gray-900/95 backdrop-blur-xl border-b border-gray-800">
             <div className="px-4 py-6 space-y-4">
-              {['Features', 'Technology', 'Pricing', 'About'].map((item) => (
-                <a key={item} href={`#${item.toLowerCase()}`} className="block text-gray-400 hover:text-white py-2">
-                  {item}
-                </a>
+              {navItems.map((item) => (
+                <button 
+                  key={item.id} 
+                  onClick={() => scrollToSection(item.id)} 
+                  className="block text-gray-400 hover:text-white py-2 w-full text-left cursor-pointer"
+                >
+                  {item.label}
+                </button>
               ))}
               <div className="pt-4 border-t border-gray-800 space-y-3">
-                <Button variant="outline" onClick={onLogin} className="w-full">Sign In</Button>
-                <Button onClick={onSignUp} className="w-full bg-gradient-to-r from-purple-500 to-cyan-500">
+                <Button variant="outline" onClick={onLogin} className="w-full cursor-pointer">Sign In</Button>
+                <Button onClick={onSignUp} className="w-full bg-gradient-to-r from-purple-500 to-cyan-500 cursor-pointer">
                   Launch App
                 </Button>
               </div>
@@ -608,18 +552,15 @@ export default function LandingPage({ onLogin, onSignUp }: LandingPageProps) {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative z-10 pt-32 pb-20 px-4 sm:px-6 lg:px-8">
+      <section id="hero" className="relative z-10 pt-32 pb-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
-          {/* Hero Content */}
           <div className="text-center mb-16">
-            {/* Floating Badge */}
             <div className="inline-flex items-center gap-2 mb-8 px-4 py-2 rounded-full bg-gradient-to-r from-purple-500/10 to-cyan-500/10 border border-purple-500/20 backdrop-blur-sm">
               <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
               <span className="text-sm text-gray-300">Quantum AI Engine v3.0 Live</span>
               <Sparkles className="h-4 w-4 text-purple-400" />
             </div>
 
-            {/* Main Headline */}
             <h1 className="text-5xl sm:text-6xl lg:text-8xl font-black mb-8 leading-tight tracking-tight">
               <span className="block bg-gradient-to-r from-white via-gray-100 to-white bg-clip-text text-transparent">
                 The Future of
@@ -632,18 +573,16 @@ export default function LandingPage({ onLogin, onSignUp }: LandingPageProps) {
               </span>
             </h1>
 
-            {/* Subheadline */}
             <p className="text-lg sm:text-xl text-gray-400 max-w-3xl mx-auto mb-10 leading-relaxed">
               Experience quantum-powered market intelligence. Our revolutionary AI analyzes millions of data points 
               in milliseconds to deliver actionable insights that were previously impossible.
             </p>
 
-            {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">
               <Button 
                 size="lg"
                 onClick={onSignUp}
-                className="group relative bg-gradient-to-r from-purple-500 via-purple-600 to-cyan-500 hover:from-purple-600 hover:via-purple-700 hover:to-cyan-600 px-10 py-7 text-lg font-semibold overflow-hidden"
+                className="group relative bg-gradient-to-r from-purple-500 via-purple-600 to-cyan-500 hover:from-purple-600 hover:via-purple-700 hover:to-cyan-600 px-10 py-7 text-lg font-semibold overflow-hidden cursor-pointer"
               >
                 <span className="relative z-10 flex items-center gap-2">
                   Start Free Trial
@@ -654,35 +593,30 @@ export default function LandingPage({ onLogin, onSignUp }: LandingPageProps) {
               <Button 
                 size="lg"
                 variant="outline"
-                className="border-gray-700 text-gray-300 hover:bg-gray-800/50 hover:border-gray-600 px-10 py-7 text-lg backdrop-blur-sm"
+                onClick={() => scrollToSection('features')}
+                className="border-gray-700 text-gray-300 hover:bg-gray-800/50 hover:border-gray-600 px-10 py-7 text-lg backdrop-blur-sm cursor-pointer"
               >
                 <Play className="mr-2 h-5 w-5" />
-                Watch Demo
+                See Features
               </Button>
             </div>
 
-            {/* Live Price Ticker */}
             <PriceTicker />
           </div>
 
-          {/* AI Visualization */}
           <div className="mb-16">
             <AIVisualization />
           </div>
 
-          {/* Hero Dashboard Preview */}
+          {/* Dashboard Preview */}
           <div className="relative max-w-6xl mx-auto">
-            {/* Glow Effect */}
             <div className="absolute inset-0 bg-gradient-to-r from-purple-500/30 via-cyan-500/30 to-purple-500/30 rounded-3xl blur-3xl opacity-50" />
-            
-            {/* Dashboard Frame */}
             <div className="relative bg-gray-900/80 backdrop-blur-2xl rounded-3xl border border-gray-700/50 overflow-hidden shadow-2xl">
-              {/* Window Controls */}
               <div className="flex items-center justify-between px-6 py-4 bg-gray-800/50 border-b border-gray-700/50">
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-red-500 hover:bg-red-400 transition-colors cursor-pointer" />
-                  <div className="w-3 h-3 rounded-full bg-yellow-500 hover:bg-yellow-400 transition-colors cursor-pointer" />
-                  <div className="w-3 h-3 rounded-full bg-green-500 hover:bg-green-400 transition-colors cursor-pointer" />
+                  <div className="w-3 h-3 rounded-full bg-red-500" />
+                  <div className="w-3 h-3 rounded-full bg-yellow-500" />
+                  <div className="w-3 h-3 rounded-full bg-green-500" />
                 </div>
                 <div className="flex items-center gap-4">
                   <span className="text-gray-400 text-sm">TradeAI Pro Dashboard</span>
@@ -699,9 +633,7 @@ export default function LandingPage({ onLogin, onSignUp }: LandingPageProps) {
                 </div>
               </div>
               
-              {/* Dashboard Content */}
               <div className="p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* AI Copilot */}
                 <div className="lg:col-span-2 space-y-4">
                   <div className="bg-gray-800/30 rounded-2xl p-5 border border-gray-700/50">
                     <div className="flex items-center gap-3 mb-4">
@@ -732,8 +664,7 @@ export default function LandingPage({ onLogin, onSignUp }: LandingPageProps) {
                             <span className="text-cyan-400">Trend:</span> Strong Bullish (82% confidence)<br/>
                             <span className="text-cyan-400">RSI:</span> 58 - Room for upside<br/>
                             <span className="text-cyan-400">Key Support:</span> $92,500<br/>
-                            <span className="text-cyan-400">Target:</span> $98,000 - $102,000<br/><br/>
-                            <span className="text-purple-400">Quantum Score:</span> 8.7/10 - High probability setup detected
+                            <span className="text-cyan-400">Target:</span> $98,000 - $102,000
                           </p>
                         </div>
                       </div>
@@ -741,7 +672,6 @@ export default function LandingPage({ onLogin, onSignUp }: LandingPageProps) {
                   </div>
                 </div>
                 
-                {/* Opportunity Card */}
                 <div className="space-y-4">
                   <div className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 rounded-2xl p-5 border border-green-500/30">
                     <div className="flex items-center gap-2 mb-4">
@@ -759,24 +689,12 @@ export default function LandingPage({ onLogin, onSignUp }: LandingPageProps) {
                         <Badge className="bg-green-500/20 text-green-400">LONG</Badge>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-gray-400">Entry Zone</span>
-                        <span className="text-white font-mono">1.0845-1.0855</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-400">Target</span>
-                        <span className="text-green-400 font-mono">1.0920</span>
-                      </div>
-                      <div className="flex justify-between items-center">
                         <span className="text-gray-400">Confidence</span>
                         <span className="text-cyan-400 font-bold">87%</span>
-                      </div>
-                      <div className="w-full bg-gray-700 rounded-full h-2 mt-2 overflow-hidden">
-                        <div className="bg-gradient-to-r from-green-500 to-cyan-500 h-2 rounded-full transition-all duration-1000" style={{ width: '87%' }} />
                       </div>
                     </div>
                   </div>
                   
-                  {/* Quick Stats */}
                   <div className="grid grid-cols-2 gap-3">
                     <div className="bg-gray-800/30 rounded-xl p-4 border border-gray-700/50 text-center">
                       <Activity className="h-5 w-5 text-purple-400 mx-auto mb-1" />
@@ -806,7 +724,6 @@ export default function LandingPage({ onLogin, onSignUp }: LandingPageProps) {
       {/* Features Section */}
       <section id="features" className="relative z-10 py-24 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
-          {/* Section Header */}
           <div className="text-center mb-20">
             <Badge className="mb-4 bg-cyan-500/20 text-cyan-400 border-cyan-500/30 px-4 py-1.5">
               <Cpu className="h-4 w-4 mr-2" />
@@ -822,12 +739,10 @@ export default function LandingPage({ onLogin, onSignUp }: LandingPageProps) {
               </span>
             </h2>
             <p className="text-gray-400 text-lg max-w-2xl mx-auto">
-              Built from the ground up with cutting-edge AI and quantum-inspired algorithms. 
-              Experience trading intelligence that was science fiction yesterday.
+              Built from the ground up with cutting-edge AI and quantum-inspired algorithms.
             </p>
           </div>
 
-          {/* Features Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {features.map((feature, idx) => (
               <Card3D key={idx} glowColor={feature.color as any} className="h-full">
@@ -865,40 +780,59 @@ export default function LandingPage({ onLogin, onSignUp }: LandingPageProps) {
         </div>
       </section>
 
-      {/* How It Works */}
-      <section className="relative z-10 py-24 px-4 sm:px-6 lg:px-8">
+      {/* Technology Section */}
+      <section id="technology" className="relative z-10 py-24 px-4 sm:px-6 lg:px-8 bg-gray-900/30">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <Badge className="mb-4 bg-purple-500/20 text-purple-400 border-purple-500/30">
-              <Rocket className="h-4 w-4 mr-2" />
-              Getting Started
+              <Cpu className="h-4 w-4 mr-2" />
+              Our Technology Stack
             </Badge>
             <h2 className="text-4xl sm:text-5xl font-bold mb-6">
               <span className="bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
-                Start Trading in
+                Built for the Future
               </span>
-              <span className="bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent"> 3 Steps</span>
             </h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
-            {/* Connection Lines */}
-            <div className="hidden md:block absolute top-1/2 left-0 right-0 h-0.5 bg-gradient-to-r from-purple-500/50 via-cyan-500/50 to-pink-500/50" />
-            
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
-              { step: '01', title: 'Create Account', desc: 'Sign up in seconds. No credit card required for free tier.', icon: Users, color: 'from-purple-500 to-purple-400' },
-              { step: '02', title: 'Connect Markets', desc: 'Select your preferred markets and configure your preferences.', icon: Globe, color: 'from-cyan-500 to-cyan-400' },
-              { step: '03', title: 'Trade Smarter', desc: 'Let AI guide your decisions with quantum-powered insights.', icon: Target, color: 'from-pink-500 to-pink-400' }
-            ].map((item, idx) => (
-              <div key={idx} className="relative text-center">
-                <div className={`w-20 h-20 rounded-2xl bg-gradient-to-br ${item.color} mx-auto mb-6 flex items-center justify-center shadow-lg`}>
-                  <item.icon className="h-10 w-10 text-white" />
+              { icon: Brain, title: 'Quantum AI Engine', desc: 'Advanced neural networks with quantum-inspired algorithms' },
+              { icon: Database, title: 'Real-time Data', desc: 'Processing millions of data points per second' },
+              { icon: Shield, title: 'Enterprise Security', desc: 'Bank-grade encryption and zero-trust architecture' },
+              { icon: Globe, title: 'Global Infrastructure', desc: '99.9% uptime with edge computing nodes worldwide' },
+            ].map((tech, idx) => (
+              <div key={idx} className="bg-gray-800/30 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50 hover:border-purple-500/50 transition-all group text-center">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-500/20 to-cyan-500/20 flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                  <tech.icon className="h-8 w-8 text-purple-400" />
                 </div>
-                <div className="text-sm font-bold text-gray-500 mb-2">STEP {item.step}</div>
-                <h3 className="text-xl font-bold text-white mb-3">{item.title}</h3>
-                <p className="text-gray-400">{item.desc}</p>
+                <h3 className="text-lg font-bold text-white mb-2">{tech.title}</h3>
+                <p className="text-gray-400 text-sm">{tech.desc}</p>
               </div>
             ))}
+          </div>
+
+          {/* How It Works */}
+          <div className="mt-20">
+            <h3 className="text-2xl font-bold text-center mb-10">How It Works</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
+              <div className="hidden md:block absolute top-1/2 left-0 right-0 h-0.5 bg-gradient-to-r from-purple-500/50 via-cyan-500/50 to-pink-500/50" />
+              
+              {[
+                { step: '01', title: 'Create Account', desc: 'Sign up in seconds. No credit card required for free tier.', icon: Users, color: 'from-purple-500 to-purple-400' },
+                { step: '02', title: 'Connect Markets', desc: 'Select your preferred markets and configure preferences.', icon: Globe, color: 'from-cyan-500 to-cyan-400' },
+                { step: '03', title: 'Trade Smarter', desc: 'Let AI guide your decisions with quantum insights.', icon: Target, color: 'from-pink-500 to-pink-400' }
+              ].map((item, idx) => (
+                <div key={idx} className="relative text-center">
+                  <div className={`w-20 h-20 rounded-2xl bg-gradient-to-br ${item.color} mx-auto mb-6 flex items-center justify-center shadow-lg`}>
+                    <item.icon className="h-10 w-10 text-white" />
+                  </div>
+                  <div className="text-sm font-bold text-gray-500 mb-2">STEP {item.step}</div>
+                  <h3 className="text-xl font-bold text-white mb-3">{item.title}</h3>
+                  <p className="text-gray-400">{item.desc}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
@@ -917,9 +851,6 @@ export default function LandingPage({ onLogin, onSignUp }: LandingPageProps) {
               </span>
               <span className="bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent"> Power Level</span>
             </h2>
-            <p className="text-gray-400 text-lg max-w-2xl mx-auto">
-              Start free and scale as you grow. All plans include our core AI features.
-            </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -946,7 +877,7 @@ export default function LandingPage({ onLogin, onSignUp }: LandingPageProps) {
                       <span className="text-5xl font-black bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
                         {plan.price === '0' ? '$0' : plan.price === 'Custom' ? '' : '$' + plan.price}
                       </span>
-                      {plan.price !== 'Custom' && <span className="text-gray-400">{plan.price === '0' ? '/mo' : '/mo'}</span>}
+                      {plan.price !== 'Custom' && <span className="text-gray-400">/mo</span>}
                       {plan.price === 'Custom' && <span className="text-3xl font-bold text-white">Custom</span>}
                     </div>
                     <p className="text-gray-500 mt-2">{plan.description}</p>
@@ -964,8 +895,8 @@ export default function LandingPage({ onLogin, onSignUp }: LandingPageProps) {
                   </ul>
 
                   <Button 
-                    onClick={plan.popular ? onSignUp : onLogin}
-                    className={`w-full py-6 text-lg font-semibold ${
+                    onClick={plan.popular ? onSignUp : plan.price === '0' ? onSignUp : onLogin}
+                    className={`w-full py-6 text-lg font-semibold cursor-pointer ${
                       plan.popular 
                         ? 'bg-gradient-to-r from-purple-500 to-cyan-500 hover:from-purple-600 hover:to-cyan-600 shadow-lg shadow-purple-500/25' 
                         : 'bg-gray-800 hover:bg-gray-700 border border-gray-700'
@@ -981,64 +912,103 @@ export default function LandingPage({ onLogin, onSignUp }: LandingPageProps) {
         </div>
       </section>
 
+      {/* About Section */}
+      <section id="about" className="relative z-10 py-24 px-4 sm:px-6 lg:px-8 bg-gray-900/30">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <div>
+              <Badge className="mb-4 bg-purple-500/20 text-purple-400 border-purple-500/30">
+                About TradeAI Pro
+              </Badge>
+              <h2 className="text-4xl sm:text-5xl font-bold mb-6">
+                <span className="bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
+                  Revolutionizing
+                </span>
+                <br />
+                <span className="bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
+                  Trading Intelligence
+                </span>
+              </h2>
+              <p className="text-gray-400 text-lg mb-6 leading-relaxed">
+                TradeAI Pro was founded with a singular mission: to democratize institutional-grade trading intelligence 
+                for every trader, regardless of experience level. Our quantum-inspired AI engine processes vast amounts 
+                of market data in real-time, identifying patterns and opportunities that would be impossible for humans to detect.
+              </p>
+              <p className="text-gray-400 text-lg mb-8 leading-relaxed">
+                With offices in Silicon Valley, Singapore, and London, our team of AI researchers, quantitative analysts, 
+                and trading veterans work tirelessly to push the boundaries of what's possible in market analysis.
+              </p>
+              <div className="flex flex-wrap gap-4">
+                <div className="flex items-center gap-2 text-gray-300">
+                  <CheckCircle className="h-5 w-5 text-green-400" />
+                  SOC 2 Certified
+                </div>
+                <div className="flex items-center gap-2 text-gray-300">
+                  <CheckCircle className="h-5 w-5 text-green-400" />
+                  GDPR Compliant
+                </div>
+                <div className="flex items-center gap-2 text-gray-300">
+                  <CheckCircle className="h-5 w-5 text-green-400" />
+                  ISO 27001
+                </div>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-6">
+              {[
+                { icon: Users, value: '50+', label: 'Team Members' },
+                { icon: Globe, value: '3', label: 'Global Offices' },
+                { icon: Award, value: '15+', label: 'Industry Awards' },
+                { icon: Clock, value: '24/7', label: 'Support' },
+              ].map((item, idx) => (
+                <div key={idx} className="bg-gray-800/30 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50 text-center">
+                  <item.icon className="h-8 w-8 text-purple-400 mx-auto mb-3" />
+                  <div className="text-3xl font-bold text-white mb-1">{item.value}</div>
+                  <div className="text-gray-400">{item.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Final CTA */}
       <section className="relative z-10 py-24 px-4 sm:px-6 lg:px-8">
         <div className="max-w-5xl mx-auto">
           <div className="relative">
             <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 via-cyan-500/20 to-pink-500/20 rounded-3xl blur-3xl" />
-            <div className="relative bg-gray-900/90 backdrop-blur-2xl rounded-3xl border border-gray-700/50 p-12 md:p-16 overflow-hidden">
-              {/* Background Animation */}
-              <div className="absolute inset-0 opacity-10">
-                <div className="absolute top-0 left-0 w-full h-full">
-                  {[...Array(10)].map((_, i) => (
-                    <div
-                      key={i}
-                      className="absolute w-1 h-20 bg-gradient-to-b from-purple-500 to-transparent"
-                      style={{
-                        left: `${10 + i * 10}%`,
-                        animation: `float ${3 + i * 0.5}s ease-in-out infinite`,
-                        animationDelay: `${i * 0.2}s`,
-                      }}
-                    />
-                  ))}
-                </div>
+            <div className="relative bg-gray-900/90 backdrop-blur-2xl rounded-3xl border border-gray-700/50 p-12 md:p-16 text-center">
+              <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-purple-500 to-cyan-500 flex items-center justify-center mx-auto mb-8 animate-glow">
+                <Rocket className="h-10 w-10 text-white" />
               </div>
-              
-              <div className="relative text-center">
-                <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-purple-500 to-cyan-500 flex items-center justify-center mx-auto mb-8 animate-glow">
-                  <Rocket className="h-10 w-10 text-white" />
-                </div>
-                <h2 className="text-4xl sm:text-5xl font-bold mb-6">
-                  <span className="bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
-                    Ready to Experience
-                  </span>
-                  <br />
-                  <span className="bg-gradient-to-r from-purple-400 via-cyan-400 to-pink-400 bg-clip-text text-transparent animate-gradient">
-                    the Future?
-                  </span>
-                </h2>
-                <p className="text-gray-400 text-lg max-w-xl mx-auto mb-10">
-                  Join thousands of traders who have already transformed their trading with AI-powered intelligence. 
-                  Start your journey today.
-                </p>
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                  <Button 
-                    size="lg"
-                    onClick={onSignUp}
-                    className="bg-gradient-to-r from-purple-500 via-purple-600 to-cyan-500 hover:from-purple-600 hover:via-purple-700 hover:to-cyan-600 px-10 py-7 text-lg font-semibold shadow-xl shadow-purple-500/25"
-                  >
-                    Start Free Trial
-                    <ArrowRight className="ml-2 h-5 w-5" />
-                  </Button>
-                  <Button 
-                    size="lg"
-                    variant="outline"
-                    onClick={onLogin}
-                    className="border-gray-600 text-gray-300 hover:bg-gray-800/50 px-10 py-7 text-lg"
-                  >
-                    Already have an account?
-                  </Button>
-                </div>
+              <h2 className="text-4xl sm:text-5xl font-bold mb-6">
+                <span className="bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
+                  Ready to Experience
+                </span>
+                <br />
+                <span className="bg-gradient-to-r from-purple-400 via-cyan-400 to-pink-400 bg-clip-text text-transparent animate-gradient">
+                  the Future?
+                </span>
+              </h2>
+              <p className="text-gray-400 text-lg max-w-xl mx-auto mb-10">
+                Join thousands of traders who have already transformed their trading with AI-powered intelligence.
+              </p>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                <Button 
+                  size="lg"
+                  onClick={onSignUp}
+                  className="bg-gradient-to-r from-purple-500 via-purple-600 to-cyan-500 hover:from-purple-600 hover:via-purple-700 hover:to-cyan-600 px-10 py-7 text-lg font-semibold shadow-xl shadow-purple-500/25 cursor-pointer"
+                >
+                  Start Free Trial
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
+                <Button 
+                  size="lg"
+                  variant="outline"
+                  onClick={onLogin}
+                  className="border-gray-600 text-gray-300 hover:bg-gray-800/50 px-10 py-7 text-lg cursor-pointer"
+                >
+                  Sign In
+                </Button>
               </div>
             </div>
           </div>
@@ -1049,21 +1019,20 @@ export default function LandingPage({ onLogin, onSignUp }: LandingPageProps) {
       <footer className="relative z-10 py-12 px-4 sm:px-6 lg:px-8 border-t border-gray-800/50">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="flex items-center gap-3">
+            <button onClick={() => scrollToSection('hero')} className="flex items-center gap-3 cursor-pointer">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-cyan-500 flex items-center justify-center">
                 <Brain className="h-6 w-6 text-white" />
               </div>
-              <div>
+              <div className="text-left">
                 <span className="text-lg font-bold text-white">TradeAI Pro</span>
                 <div className="text-xs text-gray-500">Quantum Intelligence</div>
               </div>
-            </div>
+            </button>
             
             <div className="flex items-center gap-8 text-sm text-gray-400">
-              <a href="#" className="hover:text-white transition-colors">Privacy</a>
-              <a href="#" className="hover:text-white transition-colors">Terms</a>
-              <a href="#" className="hover:text-white transition-colors">Security</a>
-              <a href="#" className="hover:text-white transition-colors">Contact</a>
+              <button onClick={() => scrollToSection('about')} className="hover:text-white transition-colors cursor-pointer">About</button>
+              <button onClick={() => scrollToSection('pricing')} className="hover:text-white transition-colors cursor-pointer">Pricing</button>
+              <button onClick={() => scrollToSection('features')} className="hover:text-white transition-colors cursor-pointer">Features</button>
             </div>
 
             <div className="text-gray-500 text-sm">
@@ -1073,8 +1042,7 @@ export default function LandingPage({ onLogin, onSignUp }: LandingPageProps) {
           
           <div className="mt-8 pt-8 border-t border-gray-800/50 text-center">
             <p className="text-gray-600 text-xs">
-              Risk Disclaimer: Trading involves substantial risk of loss. Past performance is not indicative of future results.
-              TradeAI Pro provides educational analysis only and does not provide investment advice.
+              Risk Disclaimer: Trading involves substantial risk of loss. TradeAI Pro provides educational analysis only.
             </p>
           </div>
         </div>
