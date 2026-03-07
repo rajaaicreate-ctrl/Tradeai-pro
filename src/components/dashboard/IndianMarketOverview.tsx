@@ -144,7 +144,7 @@ export default function IndianMarketOverview() {
                   {nifty50?.changePercent}%
                 </Badge>
                 <div className={`text-sm mt-1 ${nifty50 && nifty50.change >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                  {nifty50 && nifty50.change >= 0 ? '+' : ''}{nifty50?.change.toFixed(2)}
+                  {nifty50 ? `${nifty50.change >= 0 ? '+' : ''}${nifty50.change.toFixed(2)}` : '---'}
                 </div>
               </div>
             </div>
@@ -167,7 +167,7 @@ export default function IndianMarketOverview() {
                   {sensex?.changePercent}%
                 </Badge>
                 <div className={`text-sm mt-1 ${sensex && sensex.change >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                  {sensex && sensex.change >= 0 ? '+' : ''}{sensex?.change.toFixed(2)}
+                  {sensex ? `${sensex.change >= 0 ? '+' : ''}${sensex.change.toFixed(2)}` : '---'}
                 </div>
               </div>
             </div>

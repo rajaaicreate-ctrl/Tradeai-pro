@@ -16,10 +16,10 @@ interface MarketData {
 interface MarketsResponse {
   success: boolean
   data: {
-    forex: MarketData
-    crypto: MarketData
-    gold: MarketData
-    stocks: MarketData
+    forex: MarketData[]
+    crypto: MarketData[]
+    commodities: MarketData[]
+    indices: MarketData[]
   }
 }
 
@@ -45,7 +45,13 @@ export default function MarketOverview() {
       const response = await fetch('/api/market-data')
       const result: MarketsResponse = await response.json()
       if (result.success && result.data) {
-        setMarkets(result.data)
+        // Map API arrays to single objects
+        setMarkets({
+          forex: result.data.forex?.[0] || null,
+          crypto: result.data.crypto?.[0] || null,
+          gold: result.data.commodities?.[0] || null,
+          stocks: result.data.indices?.[0] || null
+        })
         setLastUpdate(new Date())
       }
     } catch (error) {
