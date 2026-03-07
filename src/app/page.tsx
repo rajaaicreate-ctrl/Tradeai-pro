@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
@@ -52,25 +52,35 @@ import {
   Radar
 } from 'lucide-react'
 import dynamic from 'next/dynamic'
-import { supabase } from '@/lib/supabase'
+import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 import LoginPage from '@/components/auth/LoginPage'
 import SignUpPage from '@/components/auth/SignUpPage'
 import AdminLoginPage from '@/components/auth/AdminLoginPage'
 
-// Dynamic imports
-const MarketOverview = dynamic(() => import('@/components/dashboard/MarketOverview'), { ssr: false })
-const AlertsCenter = dynamic(() => import('@/components/dashboard/AlertsCenter'), { ssr: false })
-const BacktestPanel = dynamic(() => import('@/components/dashboard/BacktestPanel'), { ssr: false })
-const PricingPlans = dynamic(() => import('@/components/dashboard/PricingPlans'), { ssr: false })
-const TradingChart = dynamic(() => import('@/components/dashboard/TradingChart'), { ssr: false })
-const IndianMarketOverview = dynamic(() => import('@/components/dashboard/IndianMarketOverview'), { ssr: false })
-const IndianStockScanner = dynamic(() => import('@/components/dashboard/IndianStockScanner'), { ssr: false })
-const IndianMarketHeatmap = dynamic(() => import('@/components/dashboard/IndianMarketHeatmap'), { ssr: false })
-const AISectorRotation = dynamic(() => import('@/components/dashboard/AISectorRotation'), { ssr: false })
-const AIIndianInsights = dynamic(() => import('@/components/dashboard/AIIndianInsights'), { ssr: false })
-const AIMarketCopilot = dynamic(() => import('@/components/dashboard/AIMarketCopilot'), { ssr: false })
-const AIChartAnalysis = dynamic(() => import('@/components/dashboard/AIChartAnalysis'), { ssr: false })
-const AIOpportunityRadar = dynamic(() => import('@/components/dashboard/AIOpportunityRadar'), { ssr: false })
+// Dynamic imports with error handling
+const loadComponent = (importFn: () => Promise<any>) => 
+  dynamic(importFn, { 
+    ssr: false,
+    loading: () => (
+      <div className="flex items-center justify-center p-8">
+        <Loader2 className="h-6 w-6 animate-spin text-purple-500" />
+      </div>
+    )
+  })
+
+const MarketOverview = loadComponent(() => import('@/components/dashboard/MarketOverview'))
+const AlertsCenter = loadComponent(() => import('@/components/dashboard/AlertsCenter'))
+const BacktestPanel = loadComponent(() => import('@/components/dashboard/BacktestPanel'))
+const PricingPlans = loadComponent(() => import('@/components/dashboard/PricingPlans'))
+const TradingChart = loadComponent(() => import('@/components/dashboard/TradingChart'))
+const IndianMarketOverview = loadComponent(() => import('@/components/dashboard/IndianMarketOverview'))
+const IndianStockScanner = loadComponent(() => import('@/components/dashboard/IndianStockScanner'))
+const IndianMarketHeatmap = loadComponent(() => import('@/components/dashboard/IndianMarketHeatmap'))
+const AISectorRotation = loadComponent(() => import('@/components/dashboard/AISectorRotation'))
+const AIIndianInsights = loadComponent(() => import('@/components/dashboard/AIIndianInsights'))
+const AIMarketCopilot = loadComponent(() => import('@/components/dashboard/AIMarketCopilot'))
+const AIChartAnalysis = loadComponent(() => import('@/components/dashboard/AIChartAnalysis'))
+const AIOpportunityRadar = loadComponent(() => import('@/components/dashboard/AIOpportunityRadar'))
 
 const sidebarItems = [
   { icon: LayoutDashboard, label: 'Dashboard', id: 'dashboard' },
@@ -118,6 +128,7 @@ export default function Home() {
   const [authView, setAuthView] = useState<'login' | 'signup' | 'admin'>('login')
   const [isAdmin, setIsAdmin] = useState(false)
   const [adminMode, setAdminMode] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   // Admin Live Data states
   const [adminStats, setAdminStats] = useState({
@@ -245,9 +256,10 @@ export default function Home() {
         } else {
           setLoading(false)
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error('Auth check error:', err)
         if (mounted) {
+          // Don't set error, just finish loading - show login page
           setLoading(false)
         }
       }
@@ -426,7 +438,36 @@ export default function Home() {
         <div className="text-center">
           <Loader2 className="h-12 w-12 animate-spin text-purple-500 mx-auto mb-4" />
           <p className="text-gray-400">Loading TradeAI Pro...</p>
+          <p className="text-gray-500 text-xs mt-2">Supabase: {isSupabaseConfigured ? 'Connected' : 'Not configured'}</p>
         </div>
+      </div>
+    )
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-950 flex items-center justify-center p-4">
+        <Card className="bg-gray-900/50 border-gray-800 max-w-lg w-full">
+          <CardContent className="p-8 text-center">
+            <div className="w-16 h-16 mx-auto rounded-full bg-red-500/20 flex items-center justify-center mb-4">
+              <AlertTriangle className="h-8 w-8 text-red-400" />
+            </div>
+            <h2 className="text-xl font-bold text-white mb-2">Error Loading App</h2>
+            <p className="text-gray-400 mb-4 text-sm">{error}</p>
+            <Button
+              onClick={() => {
+                setError(null)
+                setLoading(true)
+                window.location.reload()
+              }}
+              className="bg-purple-500 hover:bg-purple-600"
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Retry
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     )
   }
