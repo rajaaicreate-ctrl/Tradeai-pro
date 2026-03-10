@@ -375,3 +375,4 @@ export function subscribeToAlertHistory(userId: string, callback: (history: Aler
     )
     .subscribe()
 }
+// v2
