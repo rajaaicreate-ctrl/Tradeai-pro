@@ -3,9 +3,9 @@
 
 import { createClient } from '@supabase/supabase-js'
 
-// Get environment variables with proper fallback
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+// Get environment variables with fallback to hardcoded values
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://lqukyvrluighcivtyhmw.supabase.co'
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxxdWt5dnJsdWlnaGNpdnR5aG13Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3NzE4OTEsImV4cCI6MjA4ODM0Nzg5MX0.I_WokIBLvuoNo_JBPIlvVZaMnzUiyGFH0MN3_eN5eCI'
 
 // Check if Supabase is properly configured
 export const isSupabaseConfigured = Boolean(

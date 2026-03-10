@@ -227,36 +227,31 @@ export default function Home() {
   // Check auth state
   useEffect(() => {
     let mounted = true
-    
+
     const checkAuth = async () => {
       // Skip if admin mode (already handled above)
       if (adminMode) {
         return
       }
-      
-      // If Supabase not configured, allow direct access (skip login)
+
+      // If Supabase not configured, just finish loading (show login page)
       if (!supabase) {
-        if (mounted) {
-          // Set a demo user so the app works without auth
-          setUser({ id: 'demo-user', email: 'demo@tradeai.local' })
-          setProfile({ id: 'demo-user', email: 'demo@tradeai.local', plan: 'pro' })
-          setLoading(false)
-        }
+        if (mounted) setLoading(false)
         return
       }
-      
+
       try {
         const { data: { session } } = await supabase.auth.getSession()
-        
+
         if (!mounted) return
-        
+
         setUser(session?.user ?? null)
-        
+
         // Check if admin
         if (session?.user?.email && ADMIN_EMAILS.includes(session.user.email.toLowerCase())) {
           setIsAdmin(true)
         }
-        
+
         if (session?.user) {
           fetchProfile(session.user.id)
         } else {
@@ -270,10 +265,10 @@ export default function Home() {
         }
       }
     }
-    
+
     // Small delay to let admin check complete first
     const timer = setTimeout(checkAuth, 100)
-    
+
     return () => {
       mounted = false
       clearTimeout(timer)
