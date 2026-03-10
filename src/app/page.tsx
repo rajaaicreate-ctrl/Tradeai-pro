@@ -241,7 +241,17 @@ export default function Home() {
       }
 
       try {
-        const { data: { session } } = await supabase.auth.getSession()
+        // Add timeout to getSession
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Auth timeout')), 5000)
+        )
+
+        const sessionPromise = supabase.auth.getSession()
+
+        const { data: { session } } = await Promise.race([
+          sessionPromise,
+          timeoutPromise
+        ]) as any
 
         if (!mounted) return
 
