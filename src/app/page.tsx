@@ -224,7 +224,7 @@ export default function Home() {
     return () => clearInterval(interval)
   }, [adminMode])
 
-  // Check auth state
+  // Check auth state - SIMPLIFIED
   useEffect(() => {
     let mounted = true
 
@@ -234,63 +234,21 @@ export default function Home() {
         return
       }
 
-      // If Supabase not configured, skip login and show dashboard directly
+      // If Supabase not configured, show login
       if (!supabase) {
-        console.log('[Auth] Supabase not configured, skipping auth')
+        console.log('[Auth] No Supabase, showing login')
         if (mounted) setLoading(false)
         return
       }
 
-      try {
-        console.log('[Auth] Checking session...')
-        
-        // Quick check - no stored session means no user
-        const { data: { session }, error } = await supabase.auth.getSession()
-        
-        if (error) {
-          console.log('[Auth] Session error:', error.message)
-          if (mounted) setLoading(false)
-          return
-        }
-
-        console.log('[Auth] Session:', session ? 'found' : 'none')
-        
-        if (!mounted) return
-
-        if (session?.user) {
-          setUser(session.user)
-          
-          // Check if admin
-          if (session.user.email && ADMIN_EMAILS.includes(session.user.email.toLowerCase())) {
-            setIsAdmin(true)
-          }
-          
-          // Fetch profile
-          try {
-            const { data: profileData } = await supabase
-              .from('users')
-              .select('*')
-              .eq('id', session.user.id)
-              .single()
-            
-            if (profileData) {
-              setProfile(profileData as UserProfile)
-            }
-          } catch (e) {
-            console.log('[Auth] Profile fetch failed, continuing without profile')
-          }
-        }
-        
-        setLoading(false)
-      } catch (err: any) {
-        console.error('[Auth] Error:', err)
-        if (mounted) {
-          setLoading(false)
-        }
-      }
+      // For now, just show login page
+      // getSession() has issues on some networks
+      // TODO: Fix this later with proper session management
+      console.log('[Auth] Showing login (session check disabled)')
+      if (mounted) setLoading(false)
     }
 
-    // Run auth check immediately
+    // Run immediately
     checkAuth()
 
     return () => {
