@@ -234,54 +234,56 @@ export default function Home() {
         return
       }
 
-      // If Supabase not configured, just finish loading (show login page)
+      // If Supabase not configured, skip login and show dashboard directly
       if (!supabase) {
-        console.log('[Auth] Supabase not configured, showing login')
+        console.log('[Auth] Supabase not configured, skipping auth')
         if (mounted) setLoading(false)
         return
       }
 
       try {
-        console.log('[Auth] Starting session check...')
+        console.log('[Auth] Checking session...')
         
-        // Use a more direct approach - check localStorage first
-        const storageKey = `sb-${new URL('https://lqukyvrluighcivtyhmw.supabase.co').hostname.split('.')[0]}-auth-token`
-        const storedSession = typeof window !== 'undefined' ? localStorage.getItem(storageKey) : null
-        
-        if (!storedSession) {
-          console.log('[Auth] No stored session, showing login')
-          if (mounted) setLoading(false)
-          return
-        }
-        
-        // If we have a stored session, validate it
+        // Quick check - no stored session means no user
         const { data: { session }, error } = await supabase.auth.getSession()
         
         if (error) {
-          console.error('[Auth] Session error:', error)
+          console.log('[Auth] Session error:', error.message)
           if (mounted) setLoading(false)
           return
         }
 
-        console.log('[Auth] Session result:', session ? 'found' : 'none')
+        console.log('[Auth] Session:', session ? 'found' : 'none')
         
         if (!mounted) return
 
-        setUser(session?.user ?? null)
-
-        // Check if admin
-        if (session?.user?.email && ADMIN_EMAILS.includes(session.user.email.toLowerCase())) {
-          setIsAdmin(true)
-        }
-
         if (session?.user) {
-          fetchProfile(session.user.id)
-        } else {
-          console.log('[Auth] No valid session, showing login')
-          setLoading(false)
+          setUser(session.user)
+          
+          // Check if admin
+          if (session.user.email && ADMIN_EMAILS.includes(session.user.email.toLowerCase())) {
+            setIsAdmin(true)
+          }
+          
+          // Fetch profile
+          try {
+            const { data: profileData } = await supabase
+              .from('users')
+              .select('*')
+              .eq('id', session.user.id)
+              .single()
+            
+            if (profileData) {
+              setProfile(profileData as UserProfile)
+            }
+          } catch (e) {
+            console.log('[Auth] Profile fetch failed, continuing without profile')
+          }
         }
+        
+        setLoading(false)
       } catch (err: any) {
-        console.error('[Auth] Check error:', err)
+        console.error('[Auth] Error:', err)
         if (mounted) {
           setLoading(false)
         }
