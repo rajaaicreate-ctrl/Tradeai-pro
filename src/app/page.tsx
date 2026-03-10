@@ -1270,16 +1270,7 @@ export default function Home() {
         )
 
       case 'markets':
-        return (
-          <div className="space-y-6">
-            <TradingChart symbol="EUR/USD" height={500} />
-            
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <TradingChart symbol="BTC/USD" height={350} />
-              <TradingChart symbol="XAU/USD" height={350} />
-            </div>
-          </div>
-        )
+        return <MarketsPage />
 
       case 'indian-markets':
         return (
