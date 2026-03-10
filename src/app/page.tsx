@@ -242,9 +242,19 @@ export default function Home() {
       }
 
       try {
-        console.log('[Auth] Checking session...')
+        console.log('[Auth] Starting session check...')
         
-        // Get session with simpler approach
+        // Use a more direct approach - check localStorage first
+        const storageKey = `sb-${new URL('https://lqukyvrluighcivtyhmw.supabase.co').hostname.split('.')[0]}-auth-token`
+        const storedSession = typeof window !== 'undefined' ? localStorage.getItem(storageKey) : null
+        
+        if (!storedSession) {
+          console.log('[Auth] No stored session, showing login')
+          if (mounted) setLoading(false)
+          return
+        }
+        
+        // If we have a stored session, validate it
         const { data: { session }, error } = await supabase.auth.getSession()
         
         if (error) {
@@ -267,7 +277,7 @@ export default function Home() {
         if (session?.user) {
           fetchProfile(session.user.id)
         } else {
-          console.log('[Auth] No session, showing login')
+          console.log('[Auth] No valid session, showing login')
           setLoading(false)
         }
       } catch (err: any) {
