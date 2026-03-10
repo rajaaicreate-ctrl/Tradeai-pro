@@ -13,6 +13,12 @@ export const dynamic = 'force-dynamic'
 // ============================================
 
 async function handleStripeWebhook(event: any): Promise<void> {
+  // Skip if Supabase not configured
+  if (!supabase) {
+    console.log('Supabase not configured, skipping webhook handling')
+    return
+  }
+
   console.log(`Processing Stripe webhook: ${event.type}`)
 
   switch (event.type) {
@@ -47,6 +53,12 @@ async function handleStripeWebhook(event: any): Promise<void> {
 }
 
 async function handleRazorpayWebhook(event: any): Promise<void> {
+  // Skip if Supabase not configured
+  if (!supabase) {
+    console.log('Supabase not configured, skipping webhook handling')
+    return
+  }
+
   console.log(`Processing Razorpay webhook: ${event.event}`)
 
   switch (event.event) {

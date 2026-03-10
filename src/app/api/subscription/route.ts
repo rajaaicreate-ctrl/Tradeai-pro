@@ -2,7 +2,7 @@
 // Handles subscription creation, management, and status
 
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 import { 
   PRICING_PLANS, 
   getPlanByTier, 
@@ -27,6 +27,19 @@ export const dynamic = 'force-dynamic'
 
 export async function GET(request: NextRequest) {
   try {
+    // Check if Supabase is configured
+    if (!supabase) {
+      return NextResponse.json({
+        success: true,
+        plans: PRICING_PLANS.map(plan => ({
+          id: plan.id, tier: plan.tier, name: plan.name, description: plan.description,
+          monthlyPrice: plan.monthlyPrice, yearlyPrice: plan.yearlyPrice, currency: plan.currency,
+          features: plan.features, highlighted: plan.highlighted, limits: plan.limits
+        })),
+        message: 'Supabase not configured - showing plans only'
+      })
+    }
+
     const { searchParams } = new URL(request.url)
     const action = searchParams.get('action')
     const userId = searchParams.get('userId')
@@ -140,6 +153,14 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    // Check if Supabase is configured
+    if (!supabase) {
+      return NextResponse.json({
+        success: false,
+        error: 'Supabase not configured'
+      })
+    }
+
     const body = await request.json()
     const { 
       userId, 
@@ -249,6 +270,14 @@ export async function POST(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   try {
+    // Check if Supabase is configured
+    if (!supabase) {
+      return NextResponse.json({
+        success: false,
+        error: 'Supabase not configured'
+      })
+    }
+
     const body = await request.json()
     const { subscriptionId, action, userId } = body
 

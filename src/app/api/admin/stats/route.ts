@@ -4,17 +4,34 @@ import { createClient } from '@supabase/supabase-js'
 // Admin Stats API - Real-time platform statistics
 // Requires admin authorization via secret key
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
 // Admin secret key for authorization
 const ADMIN_SECRET = process.env.ADMIN_SECRET_KEY || 'TradeAI@2024Admin#Secret'
 
-// Create Supabase client
-const supabase = createClient(supabaseUrl, supabaseAnonKey)
+// Check if Supabase is configured
+const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey && supabaseUrl.length > 10 && supabaseAnonKey.length > 20)
+
+// Create Supabase client only if configured
+const supabase = isSupabaseConfigured ? createClient(supabaseUrl!, supabaseAnonKey!) : null
 
 export async function GET(request: NextRequest) {
   try {
+    // Check if Supabase is configured
+    if (!supabase) {
+      return NextResponse.json({
+        success: true,
+        data: {
+          totalUsers: 0, activeUsers: 0, freeUsers: 0, proUsers: 0, enterpriseUsers: 0,
+          totalRevenue: 0, monthlyGrowth: '0', apiCalls: 0, systemHealth: 99.8,
+          planDistribution: { free: { count: 0, percent: '0' }, pro: { count: 0, percent: '0' }, enterprise: { count: 0, percent: '0' } },
+          activeAlerts: 0, totalTrades: 0, closedTrades: 0, totalPnl: 0, totalPortfolioValue: 0,
+          recentUsers: [], timestamp: new Date().toISOString(), source: 'unconfigured'
+        }
+      })
+    }
+
     // Verify admin authorization
     const authHeader = request.headers.get('authorization')
     const adminKey = authHeader?.replace('Bearer ', '') || request.nextUrl.searchParams.get('key')

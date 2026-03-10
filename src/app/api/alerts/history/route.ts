@@ -9,6 +9,15 @@ export const dynamic = 'force-dynamic'
 // GET - Fetch alert history
 export async function GET(request: NextRequest) {
   try {
+    // Check if Supabase is configured
+    if (!supabase) {
+      return NextResponse.json({
+        success: true,
+        history: generateDemoHistory(),
+        source: 'demo'
+      })
+    }
+
     const { searchParams } = new URL(request.url)
     const userId = searchParams.get('userId')
     const limit = parseInt(searchParams.get('limit') || '20')

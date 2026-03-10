@@ -4,21 +4,38 @@ import { createClient } from '@supabase/supabase-js'
 // Admin Users API - Real-time user management
 // Requires admin authorization via secret key
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
 // Admin secret key for authorization
 const ADMIN_SECRET = process.env.ADMIN_SECRET_KEY || 'TradeAI@2024Admin#Secret'
 
-// Create Supabase client
-const supabase = createClient(supabaseUrl, supabaseAnonKey)
+// Check if Supabase is configured
+const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey && supabaseUrl.length > 10 && supabaseAnonKey.length > 20)
+
+// Create Supabase client only if configured
+const supabase = isSupabaseConfigured ? createClient(supabaseUrl!, supabaseAnonKey!) : null
 
 export async function GET(request: NextRequest) {
   try {
+    // Check if Supabase is configured
+    if (!supabase) {
+      return NextResponse.json({
+        success: false,
+        error: 'Supabase not configured',
+        data: {
+          users: [],
+          pagination: { page: 1, limit: 20, total: 0, totalPages: 0, hasMore: false },
+          timestamp: new Date().toISOString(),
+          source: 'unconfigured'
+        }
+      })
+    }
+
     // Verify admin authorization
     const authHeader = request.headers.get('authorization')
     const adminKey = authHeader?.replace('Bearer ', '') || request.nextUrl.searchParams.get('key')
-    
+
     if (adminKey !== ADMIN_SECRET) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized - Invalid admin key' },
@@ -165,6 +182,14 @@ export async function GET(request: NextRequest) {
 // Update user (plan change, etc.)
 export async function PATCH(request: NextRequest) {
   try {
+    // Check if Supabase is configured
+    if (!supabase) {
+      return NextResponse.json({
+        success: false,
+        error: 'Supabase not configured'
+      })
+    }
+
     // Verify admin authorization
     const authHeader = request.headers.get('authorization')
     const adminKey = authHeader?.replace('Bearer ', '')
@@ -227,6 +252,14 @@ export async function PATCH(request: NextRequest) {
 // Delete user
 export async function DELETE(request: NextRequest) {
   try {
+    // Check if Supabase is configured
+    if (!supabase) {
+      return NextResponse.json({
+        success: false,
+        error: 'Supabase not configured'
+      })
+    }
+
     // Verify admin authorization
     const authHeader = request.headers.get('authorization')
     const adminKey = authHeader?.replace('Bearer ', '')
