@@ -254,6 +254,7 @@ CREATE INDEX IF NOT EXISTS idx_alert_history_created_at ON alert_history(created
 
 // Helper functions
 export async function getCurrentUser(): Promise<DatabaseUser | null> {
+  if (!supabase) return null
   try {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return null
@@ -273,6 +274,7 @@ export async function getCurrentUser(): Promise<DatabaseUser | null> {
 }
 
 export async function upsertUser(authUser: { id: string; email: string; full_name?: string }): Promise<DatabaseUser | null> {
+  if (!supabase) return null
   try {
     const { data, error } = await supabase
       .from('users')
@@ -297,6 +299,7 @@ export async function updateUserNotificationPreferences(
   userId: string,
   preferences: { email?: boolean; telegram?: boolean; app?: boolean }
 ): Promise<boolean> {
+  if (!supabase) return false
   try {
     const { error } = await supabase
       .from('users')
@@ -315,6 +318,7 @@ export async function updateUserNotificationPreferences(
 }
 
 export async function updateUserTelegramChatId(userId: string, chatId: string): Promise<boolean> {
+  if (!supabase) return false
   try {
     const { error } = await supabase
       .from('users')
@@ -334,6 +338,7 @@ export async function updateUserTelegramChatId(userId: string, chatId: string): 
 
 // Real-time subscription for alerts
 export function subscribeToAlerts(userId: string, callback: (alert: Alert) => void) {
+  if (!supabase) return { unsubscribe: () => {} }
   return supabase
     .channel('alerts-changes')
     .on(
@@ -353,6 +358,7 @@ export function subscribeToAlerts(userId: string, callback: (alert: Alert) => vo
 
 // Real-time subscription for alert history
 export function subscribeToAlertHistory(userId: string, callback: (history: AlertHistory) => void) {
+  if (!supabase) return { unsubscribe: () => {} }
   return supabase
     .channel('alert-history-changes')
     .on(

@@ -234,9 +234,14 @@ export default function Home() {
         return
       }
       
-      // If Supabase not configured, just finish loading
+      // If Supabase not configured, allow direct access (skip login)
       if (!supabase) {
-        if (mounted) setLoading(false)
+        if (mounted) {
+          // Set a demo user so the app works without auth
+          setUser({ id: 'demo-user', email: 'demo@tradeai.local' })
+          setProfile({ id: 'demo-user', email: 'demo@tradeai.local', plan: 'pro' })
+          setLoading(false)
+        }
         return
       }
       
