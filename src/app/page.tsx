@@ -236,23 +236,25 @@ export default function Home() {
 
       // If Supabase not configured, just finish loading (show login page)
       if (!supabase) {
+        console.log('[Auth] Supabase not configured, showing login')
         if (mounted) setLoading(false)
         return
       }
 
       try {
-        // Add timeout to getSession
-        const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('Auth timeout')), 5000)
-        )
+        console.log('[Auth] Checking session...')
+        
+        // Get session with simpler approach
+        const { data: { session }, error } = await supabase.auth.getSession()
+        
+        if (error) {
+          console.error('[Auth] Session error:', error)
+          if (mounted) setLoading(false)
+          return
+        }
 
-        const sessionPromise = supabase.auth.getSession()
-
-        const { data: { session } } = await Promise.race([
-          sessionPromise,
-          timeoutPromise
-        ]) as any
-
+        console.log('[Auth] Session result:', session ? 'found' : 'none')
+        
         if (!mounted) return
 
         setUser(session?.user ?? null)
@@ -265,23 +267,22 @@ export default function Home() {
         if (session?.user) {
           fetchProfile(session.user.id)
         } else {
+          console.log('[Auth] No session, showing login')
           setLoading(false)
         }
       } catch (err: any) {
-        console.error('Auth check error:', err)
+        console.error('[Auth] Check error:', err)
         if (mounted) {
-          // Don't set error, just finish loading - show login page
           setLoading(false)
         }
       }
     }
 
-    // Small delay to let admin check complete first
-    const timer = setTimeout(checkAuth, 100)
+    // Run auth check immediately
+    checkAuth()
 
     return () => {
       mounted = false
-      clearTimeout(timer)
     }
   }, [adminMode])
 
