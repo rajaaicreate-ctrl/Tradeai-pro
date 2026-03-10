@@ -17,7 +17,7 @@ export const isSupabaseConfigured = Boolean(
 
 // Create the Supabase client only if configured
 export const supabase = isSupabaseConfigured 
-  ? createClient(supabaseUrl!, supabaseAnonKey!, {
+  ? createClient(supabaseUrl, supabaseAnonKey, {
       auth: {
         persistSession: true,
         autoRefreshToken: true,
@@ -375,4 +375,3 @@ export function subscribeToAlertHistory(userId: string, callback: (history: Aler
     )
     .subscribe()
 }
-// Tue Mar 10 05:26:48 UTC 2026
