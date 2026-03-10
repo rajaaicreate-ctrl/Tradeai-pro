@@ -69,6 +69,7 @@ const loadComponent = (importFn: () => Promise<any>) =>
   })
 
 const MarketOverview = loadComponent(() => import('@/components/dashboard/MarketOverview'))
+const MarketsPage = loadComponent(() => import('@/components/dashboard/MarketsPage'))
 const AlertsCenter = loadComponent(() => import('@/components/dashboard/AlertsCenter'))
 const BacktestPanel = loadComponent(() => import('@/components/dashboard/BacktestPanel'))
 const PricingPlans = loadComponent(() => import('@/components/dashboard/PricingPlans'))
