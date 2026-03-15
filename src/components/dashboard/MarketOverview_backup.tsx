@@ -74,7 +74,7 @@ export default function MarketOverview() {
 
   useEffect(() => {
     fetchMarketData()
-    const interval = setInterval(fetchMarketData, 30000)
+    const interval = setInterval(fetchMarketData, 30000) // Refresh every 30s
     return () => clearInterval(interval)
   }, [])
 
