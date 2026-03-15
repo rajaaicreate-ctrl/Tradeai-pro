@@ -1,95 +1,161 @@
-import { NextResponse } from 'next/server'
+import { NextResponse, NextRequest } from 'next/server'
 
-// Indian stocks data with realistic prices (updated 2024)
-const INDIAN_STOCKS = {
-  'RELIANCE.NS': { name: 'Reliance Industries', basePrice: 1280, sector: 'Energy' },
-  'TCS.NS': { name: 'Tata Consultancy Services', basePrice: 3580, sector: 'IT' },
-  'INFY.NS': { name: 'Infosys', basePrice: 1380, sector: 'IT' },
-  'HDFCBANK.NS': { name: 'HDFC Bank', basePrice: 1620, sector: 'Banking' },
-  'ICICIBANK.NS': { name: 'ICICI Bank', basePrice: 1080, sector: 'Banking' },
-  'WIPRO.NS': { name: 'Wipro', basePrice: 445, sector: 'IT' },
-  'SBIN.NS': { name: 'State Bank of India', basePrice: 625, sector: 'Banking' },
-  'BHARTIARTL.NS': { name: 'Bharti Airtel', basePrice: 1580, sector: 'Telecom' },
-  'ITC.NS': { name: 'ITC Limited', basePrice: 435, sector: 'FMCG' },
-  'KOTAKBANK.NS': { name: 'Kotak Mahindra Bank', basePrice: 1720, sector: 'Banking' },
-  'LT.NS': { name: 'Larsen & Toubro', basePrice: 3250, sector: 'Infrastructure' },
-  'AXISBANK.NS': { name: 'Axis Bank', basePrice: 1020, sector: 'Banking' },
-  'BAJFINANCE.NS': { name: 'Bajaj Finance', basePrice: 6250, sector: 'Finance' },
-  'MARUTI.NS': { name: 'Maruti Suzuki', basePrice: 11250, sector: 'Auto' },
-  'ASIANPAINT.NS': { name: 'Asian Paints', basePrice: 2250, sector: 'FMCG' },
-  'SUNPHARMA.NS': { name: 'Sun Pharma', basePrice: 1680, sector: 'Pharma' },
-  'TATASTEEL.NS': { name: 'Tata Steel', basePrice: 138, sector: 'Metals' },
-  'HINDALCO.NS': { name: 'Hindalco', basePrice: 485, sector: 'Metals' },
-  'NTPC.NS': { name: 'NTPC', basePrice: 340, sector: 'Power' },
-  'POWERGRID.NS': { name: 'Power Grid Corp', basePrice: 265, sector: 'Power' },
-  'TATAMOTORS.NS': { name: 'Tata Motors', basePrice: 680, sector: 'Auto' },
-  'HINDUNILVR.NS': { name: 'Hindustan Unilever', basePrice: 2380, sector: 'FMCG' },
-  'ADANIENT.NS': { name: 'Adani Enterprises', basePrice: 2180, sector: 'Conglomerate' },
-  'ADANIGREEN.NS': { name: 'Adani Green Energy', basePrice: 920, sector: 'Power' },
-  'DMART.NS': { name: 'Avenue Supermarts', basePrice: 3650, sector: 'Retail' },
+// Upstox API Configuration
+const UPSTOX_ACCESS_TOKEN = process.env.UPSTOX_ACCESS_TOKEN || ''
+
+// Indian stocks with instrument keys for Upstox
+const NSE_STOCKS: Record<string, { instrumentKey: string; name: string; sector: string }> = {
+  'RELIANCE': { instrumentKey: 'NSE_EQ|INE002A01018', name: 'Reliance Industries', sector: 'Energy' },
+  'TCS': { instrumentKey: 'NSE_EQ|INE467B01029', name: 'Tata Consultancy Services', sector: 'IT' },
+  'INFY': { instrumentKey: 'NSE_EQ|INE009A01021', name: 'Infosys', sector: 'IT' },
+  'HDFCBANK': { instrumentKey: 'NSE_EQ|INE040A01026', name: 'HDFC Bank', sector: 'Banking' },
+  'ICICIBANK': { instrumentKey: 'NSE_EQ|INE090A01013', name: 'ICICI Bank', sector: 'Banking' },
+  'SBIN': { instrumentKey: 'NSE_EQ|INE062A01020', name: 'State Bank of India', sector: 'Banking' },
+  'BHARTIARTL': { instrumentKey: 'NSE_EQ|INE397D01024', name: 'Bharti Airtel', sector: 'Telecom' },
+  'ITC': { instrumentKey: 'NSE_EQ|INE154A01025', name: 'ITC Limited', sector: 'FMCG' },
+  'KOTAKBANK': { instrumentKey: 'NSE_EQ|INE237A01028', name: 'Kotak Mahindra Bank', sector: 'Banking' },
+  'LT': { instrumentKey: 'NSE_EQ|INE018A01030', name: 'Larsen & Toubro', sector: 'Infrastructure' },
+  'AXISBANK': { instrumentKey: 'NSE_EQ|INE238A01034', name: 'Axis Bank', sector: 'Banking' },
+  'BAJFINANCE': { instrumentKey: 'NSE_EQ|INE296A01024', name: 'Bajaj Finance', sector: 'Finance' },
+  'MARUTI': { instrumentKey: 'NSE_EQ|INE585B01010', name: 'Maruti Suzuki', sector: 'Auto' },
+  'ASIANPAINT': { instrumentKey: 'NSE_EQ|INE021A01026', name: 'Asian Paints', sector: 'FMCG' },
+  'SUNPHARMA': { instrumentKey: 'NSE_EQ|INE044A01028', name: 'Sun Pharma', sector: 'Pharma' },
+  'TATASTEEL': { instrumentKey: 'NSE_EQ|INE081A01012', name: 'Tata Steel', sector: 'Metals' },
+  'HINDALCO': { instrumentKey: 'NSE_EQ|INE038A01020', name: 'Hindalco', sector: 'Metals' },
+  'NTPC': { instrumentKey: 'NSE_EQ|INE733A01031', name: 'NTPC', sector: 'Power' },
+  'TATAMOTORS': { instrumentKey: 'NSE_EQ|INE715A01026', name: 'Tata Motors', sector: 'Auto' },
+  'WIPRO': { instrumentKey: 'NSE_EQ|INE075A01022', name: 'Wipro', sector: 'IT' },
+  'HINDUNILVR': { instrumentKey: 'NSE_EQ|INE030A01027', name: 'Hindustan Unilever', sector: 'FMCG' },
+  'POWERGRID': { instrumentKey: 'NSE_EQ|INE752E01010', name: 'Power Grid Corp', sector: 'Power' },
+  'ADANIENT': { instrumentKey: 'NSE_EQ|INE423A01024', name: 'Adani Enterprises', sector: 'Conglomerate' },
+  'DMART': { instrumentKey: 'NSE_EQ|INE192R01022', name: 'Avenue Supermarts', sector: 'Retail' },
 }
 
-// Fetch live data from Yahoo Finance
-async function fetchYahooFinanceData(symbols: string[]) {
+// Index instrument keys
+const INDICES = {
+  'NIFTY 50': 'NSE_INDEX|Nifty 50',
+  'NIFTY BANK': 'NSE_INDEX|Nifty Bank',
+  'NIFTY IT': 'NSE_INDEX|Nifty IT',
+  'SENSEX': 'BSE_INDEX|SENSEX',
+}
+
+interface MarketQuote {
+  symbol: string
+  name: string
+  sector: string
+  price: number
+  change: number
+  changePercent: number
+  open: number
+  high: number
+  low: number
+  volume: number
+  isLive: boolean
+}
+
+// Fetch quotes from Upstox Market Quote API
+async function fetchUpstoxQuotes(instrumentKeys: string[], token: string): Promise<Map<string, any>> {
   try {
     const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 8000)
+    const timeoutId = setTimeout(() => controller.abort(), 10000)
 
-    // Yahoo Finance API endpoint
-    const url = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${symbols.join(',')}`
+    const url = `https://api.upstox.com/v2/market-quote/quotes?instrument_key=${instrumentKeys.join(',')}`
     
     const response = await fetch(url, {
       signal: controller.signal,
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/json'
       }
     })
 
     clearTimeout(timeoutId)
 
     if (!response.ok) {
-      throw new Error('Yahoo Finance API error')
+      console.error('Upstox API error:', response.status, response.statusText)
+      return new Map()
     }
 
     const data = await response.json()
-    return data.quoteResponse?.result || []
+    
+    if (data.status === 'error') {
+      console.error('Upstox API returned error:', data)
+      return new Map()
+    }
+
+    // Convert to map
+    const quoteMap = new Map()
+    if (data.data) {
+      for (const [key, value] of Object.entries(data.data)) {
+        quoteMap.set(key, value)
+      }
+    }
+    
+    return quoteMap
   } catch (error) {
-    console.error('Yahoo Finance API error:', error)
-    return []
+    console.error('Upstox fetch error:', error)
+    return new Map()
   }
 }
 
-// Generate stock data with live prices or fallback
-async function generateStockData(symbol: string, liveData?: any) {
-  const stock = INDIAN_STOCKS[symbol as keyof typeof INDIAN_STOCKS]
-  if (!stock) return null
+// Fetch index data
+async function fetchIndexData(token: string) {
+  const indexKeys = Object.values(INDICES)
+  const quotes = await fetchUpstoxQuotes(indexKeys, token)
+  
+  const indices: Record<string, any> = {}
+  
+  for (const [name, key] of Object.entries(INDICES)) {
+    const quote = quotes.get(key)
+    if (quote) {
+      indices[name.toLowerCase().replace(' ', '')] = {
+        name,
+        value: quote.last_price || 0,
+        change: quote.net_change || 0,
+        changePercent: quote.percentage_change || 0,
+        open: quote.ohlc?.open || 0,
+        high: quote.ohlc?.high || 0,
+        low: quote.ohlc?.low || 0,
+      }
+    }
+  }
+  
+  return indices
+}
 
-  // If we have live data from Yahoo
-  if (liveData && liveData.regularMarketPrice) {
+// Generate simulated data as fallback
+function generateSimulatedStock(symbol: string): MarketQuote {
+  const stock = NSE_STOCKS[symbol]
+  if (!stock) {
     return {
       symbol,
-      name: liveData.shortName || stock.name,
-      sector: stock.sector,
-      price: parseFloat(liveData.regularMarketPrice.toFixed(2)),
-      change: parseFloat((liveData.regularMarketChange || 0).toFixed(2)),
-      changePercent: parseFloat((liveData.regularMarketChangePercent || 0).toFixed(2)),
-      open: parseFloat((liveData.regularMarketOpen || stock.basePrice).toFixed(2)),
-      high: parseFloat((liveData.regularMarketDayHigh || stock.basePrice * 1.02).toFixed(2)),
-      low: parseFloat((liveData.regularMarketDayLow || stock.basePrice * 0.98).toFixed(2)),
-      volume: liveData.regularMarketVolume || Math.floor(Math.random() * 10000000 + 1000000),
-      marketCap: formatMarketCap(liveData.marketCap),
-      pe: parseFloat((liveData.trailingPE || 15 + Math.random() * 15).toFixed(2)),
-      week52High: parseFloat((liveData.fiftyTwoWeekHigh || stock.basePrice * 1.25).toFixed(2)),
-      week52Low: parseFloat((liveData.fiftyTwoWeekLow || stock.basePrice * 0.75).toFixed(2)),
-      isLive: true
+      name: symbol,
+      sector: 'Unknown',
+      price: 1000 + Math.random() * 500,
+      change: (Math.random() - 0.5) * 20,
+      changePercent: (Math.random() - 0.5) * 3,
+      open: 1000,
+      high: 1020,
+      low: 980,
+      volume: Math.floor(Math.random() * 1000000),
+      isLive: false
     }
   }
 
-  // Fallback to simulated data
-  const volatility = 0.025
-  const changePercent = (Math.random() - 0.48) * 5
-  const change = stock.basePrice * (changePercent / 100)
-  const price = stock.basePrice + change
+  // Base prices (approximate)
+  const basePrices: Record<string, number> = {
+    'RELIANCE': 1280, 'TCS': 3580, 'INFY': 1380, 'HDFCBANK': 1620,
+    'ICICIBANK': 1080, 'SBIN': 625, 'BHARTIARTL': 1580, 'ITC': 435,
+    'KOTAKBANK': 1720, 'LT': 3250, 'AXISBANK': 1020, 'BAJFINANCE': 6250,
+    'MARUTI': 11250, 'ASIANPAINT': 2250, 'SUNPHARMA': 1680, 'TATASTEEL': 138,
+    'HINDALCO': 485, 'NTPC': 340, 'TATAMOTORS': 680, 'WIPRO': 445,
+    'HINDUNILVR': 2380, 'POWERGRID': 265, 'ADANIENT': 2180, 'DMART': 3650
+  }
+
+  const basePrice = basePrices[symbol] || 1000
+  const changePercent = (Math.random() - 0.48) * 4
+  const change = basePrice * (changePercent / 100)
+  const price = basePrice + change
 
   return {
     symbol,
@@ -98,29 +164,16 @@ async function generateStockData(symbol: string, liveData?: any) {
     price: parseFloat(price.toFixed(2)),
     change: parseFloat(change.toFixed(2)),
     changePercent: parseFloat(changePercent.toFixed(2)),
-    open: parseFloat((stock.basePrice - (Math.random() - 0.5) * stock.basePrice * 0.01).toFixed(2)),
-    high: parseFloat((price + Math.random() * price * 0.012).toFixed(2)),
-    low: parseFloat((price - Math.random() * price * 0.012).toFixed(2)),
-    volume: Math.floor(Math.random() * 10000000 + 1000000),
-    marketCap: `${(Math.random() * 10 + 1).toFixed(1)}L Cr`,
-    pe: parseFloat((Math.random() * 25 + 12).toFixed(2)),
-    week52High: parseFloat((stock.basePrice * 1.25).toFixed(2)),
-    week52Low: parseFloat((stock.basePrice * 0.75).toFixed(2)),
+    open: parseFloat((basePrice - (Math.random() - 0.5) * basePrice * 0.01).toFixed(2)),
+    high: parseFloat((price + Math.random() * price * 0.01).toFixed(2)),
+    low: parseFloat((price - Math.random() * price * 0.01).toFixed(2)),
+    volume: Math.floor(Math.random() * 5000000 + 500000),
     isLive: false
   }
 }
 
-function formatMarketCap(marketCap?: number): string {
-  if (!marketCap) return 'N/A'
-  if (marketCap > 1e14) return `${(marketCap / 1e14).toFixed(1)}L Cr`
-  if (marketCap > 1e12) return `${(marketCap / 1e12).toFixed(1)}T`
-  if (marketCap > 1e9) return `${(marketCap / 1e9).toFixed(1)}B`
-  return `${(marketCap / 1e6).toFixed(1)}M`
-}
-
-// Generate index data
-function generateIndexData() {
-  // Approximate current levels (March 2024)
+// Generate simulated index data
+function generateSimulatedIndexData() {
   const niftyBase = 22450
   const niftyChange = (Math.random() - 0.48) * 350
   
@@ -130,108 +183,139 @@ function generateIndexData() {
   const bankNiftyBase = 48500
   const bankNiftyChange = (Math.random() - 0.48) * 700
 
-  const finNiftyBase = 20500
-  const finNiftyChange = (Math.random() - 0.48) * 300
-
   return {
     nifty50: {
       name: 'NIFTY 50',
       value: parseFloat((niftyBase + niftyChange).toFixed(2)),
       change: parseFloat(niftyChange.toFixed(2)),
       changePercent: parseFloat(((niftyChange / niftyBase) * 100).toFixed(2)),
-      open: niftyBase - 50 + (Math.random() - 0.5) * 30,
-      high: niftyBase + Math.max(niftyChange, 0) + 80,
-      low: niftyBase + Math.min(niftyChange, 0) - 60,
     },
     sensex: {
       name: 'SENSEX',
       value: parseFloat((sensexBase + sensexChange).toFixed(2)),
       change: parseFloat(sensexChange.toFixed(2)),
       changePercent: parseFloat(((sensexChange / sensexBase) * 100).toFixed(2)),
-      open: sensexBase - 150 + (Math.random() - 0.5) * 100,
-      high: sensexBase + Math.max(sensexChange, 0) + 250,
-      low: sensexBase + Math.min(sensexChange, 0) - 180,
     },
-    bankNifty: {
+    banknifty: {
       name: 'BANK NIFTY',
       value: parseFloat((bankNiftyBase + bankNiftyChange).toFixed(2)),
       change: parseFloat(bankNiftyChange.toFixed(2)),
       changePercent: parseFloat(((bankNiftyChange / bankNiftyBase) * 100).toFixed(2)),
-      open: bankNiftyBase - 100 + (Math.random() - 0.5) * 50,
-      high: bankNiftyBase + Math.max(bankNiftyChange, 0) + 150,
-      low: bankNiftyBase + Math.min(bankNiftyChange, 0) - 120,
-    },
-    finNifty: {
-      name: 'FIN NIFTY',
-      value: parseFloat((finNiftyBase + finNiftyChange).toFixed(2)),
-      change: parseFloat(finNiftyChange.toFixed(2)),
-      changePercent: parseFloat(((finNiftyChange / finNiftyBase) * 100).toFixed(2)),
-      open: finNiftyBase - 50 + (Math.random() - 0.5) * 30,
-      high: finNiftyBase + Math.max(finNiftyChange, 0) + 80,
-      low: finNiftyBase + Math.min(finNiftyChange, 0) - 60,
     }
   }
 }
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const type = searchParams.get('type') || 'all'
   const symbol = searchParams.get('symbol')
 
+  // Get token from cookie or header
+  const tokenFromCookie = request.cookies.get('upstox_token')?.value
+  const tokenFromHeader = request.headers.get('X-Upstox-Token')
+  const upstoxToken = tokenFromCookie || tokenFromHeader || UPSTOX_ACCESS_TOKEN
+
   try {
-    // Try to fetch live data from Yahoo Finance
-    const topSymbols = ['RELIANCE.NS', 'TCS.NS', 'HDFCBANK.NS', 'INFY.NS', 'ICICIBANK.NS', 
-                        'ITC.NS', 'SBIN.NS', 'BHARTIARTL.NS', 'KOTAKBANK.NS', 'LT.NS']
-    
-    const liveQuotes = await fetchYahooFinanceData(topSymbols)
-    const liveDataMap = new Map(liveQuotes.map((q: any) => [q.symbol, q]))
-
-    if (type === 'index') {
-      return NextResponse.json({
-        success: true,
-        data: generateIndexData(),
-        timestamp: new Date().toISOString()
-      })
-    }
-
-    if (type === 'stock' && symbol) {
-      const liveQuote = liveDataMap.get(symbol)
-      const stockData = await generateStockData(symbol, liveQuote)
-      if (!stockData) {
-        return NextResponse.json({ error: 'Stock not found' }, { status: 404 })
+    // If we have Upstox token, try to fetch live data
+    if (upstoxToken) {
+      console.log('[Indian Market] Using Upstox token for live data')
+      
+      if (type === 'index') {
+        const indexData = await fetchIndexData(upstoxToken)
+        return NextResponse.json({
+          success: true,
+          data: Object.keys(indexData).length > 0 ? indexData : generateSimulatedIndexData(),
+          source: Object.keys(indexData).length > 0 ? 'upstox' : 'simulated',
+          timestamp: new Date().toISOString()
+        })
       }
+
+      // Fetch stock quotes
+      const stockSymbols = Object.keys(NSE_STOCKS)
+      const instrumentKeys = stockSymbols.map(s => NSE_STOCKS[s].instrumentKey)
+      
+      const quotes = await fetchUpstoxQuotes(instrumentKeys, upstoxToken)
+      const liveCount = quotes.size
+      
+      const stocks: MarketQuote[] = stockSymbols.map(symbol => {
+        const stock = NSE_STOCKS[symbol]
+        const quote = quotes.get(stock.instrumentKey)
+        
+        if (quote && quote.last_price) {
+          return {
+            symbol,
+            name: stock.name,
+            sector: stock.sector,
+            price: quote.last_price,
+            change: quote.net_change || 0,
+            changePercent: quote.percentage_change || 0,
+            open: quote.ohlc?.open || quote.last_price,
+            high: quote.ohlc?.high || quote.last_price,
+            low: quote.ohlc?.low || quote.last_price,
+            volume: quote.volume || 0,
+            isLive: true
+          }
+        }
+        
+        return generateSimulatedStock(symbol)
+      })
+
+      const indices = await fetchIndexData(upstoxToken)
+      
       return NextResponse.json({
         success: true,
-        data: stockData,
+        data: {
+          indices: Object.keys(indices).length > 0 ? indices : generateSimulatedIndexData(),
+          stocks,
+          topGainers: [...stocks].sort((a, b) => b.changePercent - a.changePercent).slice(0, 5),
+          topLosers: [...stocks].sort((a, b) => a.changePercent - b.changePercent).slice(0, 5),
+          sectors: generateSectorData(),
+          liveCount,
+          totalCount: stocks.length
+        },
+        source: liveCount > 0 ? 'upstox' : 'simulated',
         timestamp: new Date().toISOString()
       })
     }
 
-    // Default: return all data
-    const allStocks = await Promise.all(
-      Object.keys(INDIAN_STOCKS).map(async (s) => {
-        const liveQuote = liveDataMap.get(s)
-        return generateStockData(s, liveQuote)
-      })
-    )
-    const validStocks = allStocks.filter(Boolean)
+    // Fallback to simulated data
+    console.log('[Indian Market] No Upstox token, using simulated data')
+    
+    const stocks = Object.keys(NSE_STOCKS).map(s => generateSimulatedStock(s))
     
     return NextResponse.json({
       success: true,
       data: {
-        indices: generateIndexData(),
-        stocks: validStocks,
-        topGainers: [...validStocks].sort((a: any, b: any) => b.changePercent - a.changePercent).slice(0, 5),
-        topLosers: [...validStocks].sort((a: any, b: any) => a.changePercent - b.changePercent).slice(0, 5),
+        indices: generateSimulatedIndexData(),
+        stocks,
+        topGainers: [...stocks].sort((a, b) => b.changePercent - a.changePercent).slice(0, 5),
+        topLosers: [...stocks].sort((a, b) => a.changePercent - b.changePercent).slice(0, 5),
         sectors: generateSectorData(),
-        liveCount: validStocks.filter((s: any) => s.isLive).length,
-        totalCount: validStocks.length
+        liveCount: 0,
+        totalCount: stocks.length
       },
+      source: 'simulated',
       timestamp: new Date().toISOString()
     })
-  } catch (error) {
-    console.error('Indian market data error:', error)
-    return NextResponse.json({ error: 'Failed to fetch market data' }, { status: 500 })
+  } catch (error: any) {
+    console.error('[Indian Market] Error:', error)
+    
+    // Return simulated data on error
+    const stocks = Object.keys(NSE_STOCKS).map(s => generateSimulatedStock(s))
+    
+    return NextResponse.json({
+      success: true,
+      data: {
+        indices: generateSimulatedIndexData(),
+        stocks,
+        topGainers: [...stocks].sort((a, b) => b.changePercent - a.changePercent).slice(0, 5),
+        topLosers: [...stocks].sort((a, b) => a.changePercent - b.changePercent).slice(0, 5),
+        sectors: generateSectorData(),
+      },
+      source: 'simulated',
+      error: error.message,
+      timestamp: new Date().toISOString()
+    })
   }
 }
 
@@ -239,12 +323,12 @@ function generateSectorData() {
   const sectors = ['Banking', 'IT', 'Energy', 'FMCG', 'Pharma', 'Auto', 'Metals', 'Power', 'Realty', 'Infrastructure']
   
   return sectors.map(sector => {
-    const change = (Math.random() - 0.45) * 4
+    const change = (Math.random() - 0.45) * 3
     return {
       name: sector,
       change: parseFloat(change.toFixed(2)),
       trend: change > 0.8 ? 'bullish' : change < -0.8 ? 'bearish' : 'neutral',
-      stocks: Math.floor(Math.random() * 20 + 5)
+      stocks: Math.floor(Math.random() * 15 + 5)
     }
   })
 }
