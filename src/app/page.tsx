@@ -1155,56 +1155,62 @@ export default function Home() {
             <MarketOverview />
             
             {/* Trading Chart */}
-            <TradingChart symbol="EUR/USD" height={400} />
+            <div className="glass-card rounded-2xl p-1 hover-lift">
+              <TradingChart symbol="EUR/USD" height={400} />
+            </div>
             
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-2 space-y-6">
                 {/* Portfolio Section */}
-                <Card className="bg-gray-900/50 border-gray-800">
-                  <CardHeader>
-                    <CardTitle className="text-white flex items-center gap-2">
-                      <Wallet className="h-5 w-5 text-amber-400" />
+                <Card className="glass-card rounded-2xl border-white/5 overflow-hidden hover-lift">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-white flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center">
+                        <Wallet className="h-4 w-4 text-white" />
+                      </div>
                       Portfolio Overview
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                      <div className="bg-gray-800/50 rounded-lg p-4">
-                        <div className="text-xs text-gray-400 mb-1">Balance</div>
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                      <div className="glass rounded-xl p-4 text-center hover:bg-white/5 transition-all">
+                        <div className="text-xs text-gray-500 mb-1 uppercase tracking-wide">Balance</div>
                         <p className="text-2xl font-bold text-white">${portfolio.balance.toLocaleString()}</p>
                       </div>
-                      <div className="bg-gray-800/50 rounded-lg p-4">
-                        <div className="text-xs text-gray-400 mb-1">P/L</div>
+                      <div className="glass rounded-xl p-4 text-center hover:bg-white/5 transition-all border border-green-500/20">
+                        <div className="text-xs text-gray-500 mb-1 uppercase tracking-wide">P/L</div>
                         <p className="text-2xl font-bold text-green-400">+${portfolio.totalPL.toLocaleString()}</p>
-                        <Badge className="bg-green-500/20 text-green-400 text-xs mt-1">+14.1%</Badge>
+                        <Badge className="bg-green-500/20 text-green-400 text-xs mt-1 border border-green-500/30">+14.1%</Badge>
                       </div>
-                      <div className="bg-gray-800/50 rounded-lg p-4">
-                        <div className="text-xs text-gray-400 mb-1">Win Rate</div>
-                        <p className="text-2xl font-bold text-white">{portfolio.winRate}%</p>
-                        <Progress value={portfolio.winRate} className="h-2 mt-2" />
+                      <div className="glass rounded-xl p-4 text-center hover:bg-white/5 transition-all">
+                        <div className="text-xs text-gray-500 mb-1 uppercase tracking-wide">Win Rate</div>
+                        <p className="text-2xl font-bold gradient-text">{portfolio.winRate}%</p>
+                        <Progress value={portfolio.winRate} className="h-1.5 mt-2" />
                       </div>
-                      <div className="bg-gray-800/50 rounded-lg p-4">
-                        <div className="text-xs text-gray-400 mb-1">Total Trades</div>
+                      <div className="glass rounded-xl p-4 text-center hover:bg-white/5 transition-all">
+                        <div className="text-xs text-gray-500 mb-1 uppercase tracking-wide">Trades</div>
                         <p className="text-2xl font-bold text-white">{portfolio.totalTrades}</p>
                       </div>
-                      <div className="bg-gray-800/50 rounded-lg p-4">
-                        <div className="text-xs text-gray-400 mb-1">Risk Level</div>
-                        <Badge className="bg-amber-500/20 text-amber-400 text-base px-3 py-1">{portfolio.riskLevel}</Badge>
+                      <div className="glass rounded-xl p-4 text-center hover:bg-white/5 transition-all border border-amber-500/20">
+                        <div className="text-xs text-gray-500 mb-1 uppercase tracking-wide">Risk</div>
+                        <Badge className="bg-amber-500/20 text-amber-400 text-base px-3 py-1 border border-amber-500/30">{portfolio.riskLevel}</Badge>
                       </div>
                     </div>
                   </CardContent>
                 </Card>
 
                 {/* AI Insights */}
-                <Card className="bg-gray-900/50 border-gray-800">
-                  <CardHeader>
+                <Card className="glass-card rounded-2xl border-white/5 overflow-hidden hover-lift">
+                  <CardHeader className="pb-2">
                     <div className="flex items-center justify-between">
-                      <CardTitle className="text-white flex items-center gap-2">
-                        <Brain className="h-5 w-5 text-purple-400" />
+                      <CardTitle className="text-white flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-violet-600 flex items-center justify-center">
+                          <Brain className="h-4 w-4 text-white" />
+                        </div>
                         AI Market Analysis
                       </CardTitle>
-                      <Button variant="ghost" size="sm" onClick={loadAIData} disabled={aiLoading}>
-                        <RefreshCw className={`h-4 w-4 mr-1 ${aiLoading ? 'animate-spin' : ''}`} />
+                      <Button variant="ghost" size="sm" onClick={loadAIData} disabled={aiLoading} className="glass-button rounded-lg">
+                        <RefreshCw className={`h-4 w-4 mr-2 ${aiLoading ? 'animate-spin' : ''}`} />
                         Refresh
                       </Button>
                     </div>
@@ -1212,16 +1218,25 @@ export default function Home() {
                   <CardContent>
                     <div className="space-y-3">
                       {aiInsights.map((insight, idx) => (
-                        <div key={idx} className={`p-3 rounded-lg border ${
-                          insight.type === 'trend' ? 'bg-green-500/10 border-green-500/50' :
-                          insight.type === 'pattern' ? 'bg-purple-500/10 border-purple-500/50' :
-                          'bg-gray-500/10 border-gray-500/50'
-                        }`}>
-                          <div className="flex items-center justify-between mb-1">
-                            <h4 className="text-sm font-medium text-white">{insight.title}</h4>
-                            <Badge className="bg-gray-700 text-gray-300 text-xs">{insight.probability}% prob</Badge>
+                        <div key={idx} className={`glass rounded-xl p-4 border transition-all hover:bg-white/5 cursor-pointer ${
+                          insight.type === 'trend' ? 'border-green-500/30 hover:border-green-500/50' :
+                          insight.type === 'pattern' ? 'border-purple-500/30 hover:border-purple-500/50' :
+                          'border-gray-500/30 hover:border-gray-500/50'
+                        }`} style={{ animationDelay: `${idx * 100}ms` }}>
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              {insight.type === 'trend' ? <ArrowUpRight className="h-4 w-4 text-green-400" /> :
+                               insight.type === 'pattern' ? <Target className="h-4 w-4 text-purple-400" /> :
+                               <Activity className="h-4 w-4 text-gray-400" />}
+                              <h4 className="text-sm font-medium text-white">{insight.title}</h4>
+                            </div>
+                            <Badge className={`text-xs ${
+                              insight.type === 'trend' ? 'bg-green-500/20 text-green-400 border-green-500/30' :
+                              insight.type === 'pattern' ? 'bg-purple-500/20 text-purple-400 border-purple-500/30' :
+                              'bg-gray-500/20 text-gray-400 border-gray-500/30'
+                            }`}>{insight.probability}% prob</Badge>
                           </div>
-                          <p className="text-xs text-gray-400">{insight.description}</p>
+                          <p className="text-xs text-gray-400 leading-relaxed">{insight.description}</p>
                         </div>
                       ))}
                     </div>
@@ -1229,33 +1244,44 @@ export default function Home() {
                 </Card>
 
                 {/* Opportunities */}
-                <Card className="bg-gray-900/50 border-gray-800">
-                  <CardHeader>
-                    <CardTitle className="text-white flex items-center gap-2">
-                      <Zap className="h-5 w-5 text-cyan-400" />
+                <Card className="glass-card rounded-2xl border-white/5 overflow-hidden hover-lift">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-white flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center">
+                        <Zap className="h-4 w-4 text-white" />
+                      </div>
                       AI-Scanned Opportunities
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {opportunities.map((opp, idx) => (
-                        <Card key={idx} className="bg-gray-800/50 border-gray-700">
+                        <Card key={idx} className="glass rounded-xl border-white/5 hover:bg-white/5 transition-all cursor-pointer group">
                           <CardContent className="p-4">
-                            <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center justify-between mb-3">
                               <div className="flex items-center gap-2">
-                                <span className="text-white font-bold">{opp.symbol}</span>
-                                <Badge className={opp.direction === 'Long' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}>
+                                <span className="text-white font-bold text-lg">{opp.symbol}</span>
+                                <Badge className={`text-xs ${opp.direction === 'Long' ? 'bg-green-500/20 text-green-400 border-green-500/30' : 'bg-red-500/20 text-red-400 border-red-500/30'}`}>
                                   {opp.direction}
                                 </Badge>
                               </div>
-                              <span className="text-cyan-400 font-bold">{opp.confidence}%</span>
+                              <span className="text-cyan-400 font-bold text-lg">{opp.confidence}%</span>
                             </div>
                             <p className="text-gray-400 text-sm mb-2">{opp.type}</p>
-                            <p className="text-xs text-gray-500">{opp.reasoning}</p>
-                            <div className="grid grid-cols-3 gap-2 text-xs mt-3">
-                              <div><span className="text-gray-500">Entry:</span> <span className="text-white">{opp.entry}</span></div>
-                              <div><span className="text-gray-500">Target:</span> <span className="text-green-400">{opp.target}</span></div>
-                              <div><span className="text-gray-500">Stop:</span> <span className="text-red-400">{opp.stopLoss}</span></div>
+                            <p className="text-xs text-gray-500 leading-relaxed">{opp.reasoning}</p>
+                            <div className="grid grid-cols-3 gap-2 text-xs mt-4 pt-3 border-t border-white/5">
+                              <div>
+                                <span className="text-gray-600 block mb-1">Entry</span>
+                                <span className="text-white font-medium">{opp.entry}</span>
+                              </div>
+                              <div>
+                                <span className="text-gray-600 block mb-1">Target</span>
+                                <span className="text-green-400 font-medium">{opp.target}</span>
+                              </div>
+                              <div>
+                                <span className="text-gray-600 block mb-1">Stop</span>
+                                <span className="text-red-400 font-medium">{opp.stopLoss}</span>
+                              </div>
                             </div>
                           </CardContent>
                         </Card>
@@ -1269,22 +1295,24 @@ export default function Home() {
                 <AlertsCenter />
                 
                 {/* AI Coach */}
-                <Card className="bg-gray-900/50 border-gray-800">
-                  <CardHeader>
-                    <CardTitle className="text-white flex items-center gap-2">
-                      <GraduationCap className="h-5 w-5 text-indigo-400" />
+                <Card className="glass-card rounded-2xl border-white/5 overflow-hidden hover-lift">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-white flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+                        <GraduationCap className="h-4 w-4 text-white" />
+                      </div>
                       AI Coach
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
                     {coachingTips.map((tip, idx) => (
-                      <div key={idx} className={`p-3 rounded-lg border ${
-                        tip.type === 'warning' ? 'bg-amber-500/10 border-amber-500/50' :
-                        tip.type === 'success' ? 'bg-green-500/10 border-green-500/50' :
-                        tip.type === 'info' ? 'bg-blue-500/10 border-blue-500/50' :
-                        'bg-purple-500/10 border-purple-500/50'
-                      }`}>
-                        <div className="flex items-center gap-2 mb-1">
+                      <div key={idx} className={`glass rounded-xl p-4 border transition-all hover:bg-white/5 cursor-pointer ${
+                        tip.type === 'warning' ? 'border-amber-500/30' :
+                        tip.type === 'success' ? 'border-green-500/30' :
+                        tip.type === 'info' ? 'border-blue-500/30' :
+                        'border-purple-500/30'
+                      }`} style={{ animationDelay: `${idx * 100}ms` }}>
+                        <div className="flex items-center gap-2 mb-2">
                           {tip.type === 'warning' ? <AlertTriangle className="h-4 w-4 text-amber-400" /> :
                            tip.type === 'success' ? <CheckCircle className="h-4 w-4 text-green-400" /> :
                            tip.type === 'info' ? <Info className="h-4 w-4 text-blue-400" /> :
@@ -1295,40 +1323,12 @@ export default function Home() {
                             tip.type === 'info' ? 'text-blue-400' : 'text-purple-400'
                           }`}>{tip.title}</span>
                         </div>
-                        <p className="text-xs text-gray-300">{tip.message}</p>
+                        <p className="text-xs text-gray-400 leading-relaxed">{tip.message}</p>
                       </div>
                     ))}
                   </CardContent>
                 </Card>
               </div>
-            </div>
-
-            {/* Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <Card className="bg-gray-900/50 border-gray-800">
-                <CardContent className="p-4">
-                  <div className="text-gray-400 text-sm">Opportunities Found</div>
-                  <div className="text-2xl font-bold text-white mt-1">{opportunities.length}</div>
-                </CardContent>
-              </Card>
-              <Card className="bg-gray-900/50 border-gray-800">
-                <CardContent className="p-4">
-                  <div className="text-gray-400 text-sm">AI Accuracy (7d)</div>
-                  <div className="text-2xl font-bold text-white mt-1">74.2%</div>
-                </CardContent>
-              </Card>
-              <Card className="bg-gray-900/50 border-gray-800">
-                <CardContent className="p-4">
-                  <div className="text-gray-400 text-sm">Active Alerts</div>
-                  <div className="text-2xl font-bold text-white mt-1">{alerts.filter(a => !a.triggered).length}</div>
-                </CardContent>
-              </Card>
-              <Card className="bg-gray-900/50 border-gray-800">
-                <CardContent className="p-4">
-                  <div className="text-gray-400 text-sm">Your Plan</div>
-                  <div className="text-2xl font-bold text-purple-400 mt-1 capitalize">{profile?.plan || 'Free'}</div>
-                </CardContent>
-              </Card>
             </div>
           </div>
         )
@@ -1747,70 +1747,122 @@ export default function Home() {
   const currentSidebarItems = isAdmin ? adminSidebarItems : sidebarItems
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white flex">
-      {/* Sidebar */}
-      <aside className={`${sidebarOpen ? 'w-64' : 'w-16'} bg-gray-900/80 border-r border-gray-800 flex flex-col transition-all duration-300 fixed h-full z-50`}>
-        <div className="p-4 border-b border-gray-800">
+    <div className="min-h-screen bg-[#0a0a12] text-white flex relative overflow-hidden">
+      {/* Animated Background */}
+      <div className="fixed inset-0 pointer-events-none">
+        {/* Gradient orbs */}
+        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-purple-600/20 rounded-full blur-[120px] animate-pulse-glow" />
+        <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-cyan-600/15 rounded-full blur-[100px] animate-pulse-glow" style={{ animationDelay: '2s' }} />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-to-br from-purple-600/10 to-cyan-600/10 rounded-full blur-[150px] animate-pulse-glow" style={{ animationDelay: '4s' }} />
+        
+        {/* Floating particles */}
+        {[...Array(30)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute w-1 h-1 bg-white/20 rounded-full animate-float-particle"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              animationDelay: `${Math.random() * 10}s`,
+              animationDuration: `${10 + Math.random() * 15}s`
+            }}
+          />
+        ))}
+        
+        {/* Grid overlay */}
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:60px_60px]" />
+      </div>
+
+      {/* Glassmorphism Sidebar */}
+      <aside className={`${sidebarOpen ? 'w-72' : 'w-20'} glass-sidebar flex flex-col transition-all duration-500 fixed h-full z-50`}>
+        {/* Logo Section */}
+        <div className="p-5 border-b border-white/5">
           <div className="flex items-center justify-between">
             {sidebarOpen && (
-              <div className="flex items-center gap-2">
-                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isAdmin ? 'bg-gradient-to-br from-amber-500 to-red-500' : 'bg-gradient-to-br from-purple-500 to-cyan-500'}`}>
+              <div className="flex items-center gap-3 animate-fade-in">
+                <div className={`relative w-10 h-10 rounded-xl flex items-center justify-center ${isAdmin ? 'bg-gradient-to-br from-amber-500 to-orange-600' : 'bg-gradient-to-br from-purple-500 via-violet-500 to-cyan-500'} shadow-lg ${isAdmin ? 'shadow-amber-500/30' : 'shadow-purple-500/30'}`}>
                   {isAdmin ? <Shield className="h-5 w-5 text-white" /> : <Brain className="h-5 w-5 text-white" />}
+                  <div className="absolute inset-0 rounded-xl bg-white/20 animate-pulse" style={{ animationDuration: '3s' }} />
                 </div>
                 <div className="flex flex-col">
-                  <span className="font-bold text-white text-sm">TradeAI Pro</span>
-                  {isAdmin && <span className="text-amber-400 text-xs">Admin Panel</span>}
+                  <span className="font-bold text-white text-lg tracking-tight">TradeAI</span>
+                  <span className={`text-xs font-medium ${isAdmin ? 'text-amber-400' : 'text-cyan-400'}`}>
+                    {isAdmin ? 'Admin Panel' : 'Pro Dashboard'}
+                  </span>
                 </div>
               </div>
             )}
-            <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(!sidebarOpen)} className="h-8 w-8">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => setSidebarOpen(!sidebarOpen)} 
+              className="h-9 w-9 rounded-xl hover:bg-white/10 text-gray-400 hover:text-white transition-all"
+            >
               {sidebarOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
             </Button>
           </div>
         </div>
 
-        <ScrollArea className="flex-1 p-2">
-          <nav className="space-y-1">
-            {currentSidebarItems.map((item) => (
+        {/* Navigation */}
+        <ScrollArea className="flex-1 p-3">
+          <nav className="space-y-1.5">
+            {currentSidebarItems.map((item, idx) => (
               <Button
                 key={item.id}
-                variant={activeSection === item.id ? 'secondary' : 'ghost'}
-                className={`w-full justify-start gap-3 ${
+                variant="ghost"
+                className={`w-full justify-start gap-3 h-11 rounded-xl transition-all duration-300 ${
                   activeSection === item.id 
                     ? isAdmin 
-                      ? 'bg-amber-500/20 text-amber-400 hover:bg-amber-500/30' 
-                      : 'bg-purple-500/20 text-purple-400 hover:bg-purple-500/30' 
-                    : 'text-gray-400 hover:text-white'
+                      ? 'bg-gradient-to-r from-amber-500/20 to-orange-500/10 text-amber-400 border border-amber-500/30 shadow-lg shadow-amber-500/10' 
+                      : 'bg-gradient-to-r from-purple-500/20 to-cyan-500/10 text-white border border-purple-500/30 shadow-lg shadow-purple-500/10' 
+                    : 'text-gray-400 hover:text-white hover:bg-white/5'
                 }`}
                 onClick={() => setActiveSection(item.id)}
+                style={{ animationDelay: `${idx * 50}ms` }}
               >
-                <item.icon className="h-4 w-4 flex-shrink-0" />
-                {sidebarOpen && <span className="truncate">{item.label}</span>}
+                <item.icon className={`h-5 w-5 flex-shrink-0 ${activeSection === item.id ? (isAdmin ? 'text-amber-400' : 'text-purple-400') : ''}`} />
+                {sidebarOpen && <span className="truncate font-medium">{item.label}</span>}
               </Button>
             ))}
           </nav>
         </ScrollArea>
 
-        <div className="p-4 border-t border-gray-800">
+        {/* User Profile Section */}
+        <div className="p-4 border-t border-white/5">
           {sidebarOpen ? (
-            <div className="flex items-center gap-3">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${isAdmin ? 'bg-gradient-to-br from-amber-500 to-red-500' : 'bg-gradient-to-br from-cyan-500 to-purple-500'}`}>
-                {isAdmin ? <Shield className="h-4 w-4 text-white" /> : <User className="h-4 w-4 text-white" />}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="text-sm font-medium text-white truncate">{profile?.full_name || profile?.email || 'User'}</div>
-                <div className="flex items-center gap-2">
-                  <div className={`text-xs capitalize ${isAdmin ? 'text-amber-400' : 'text-gray-500'}`}>{isAdmin ? 'Admin' : profile?.plan || 'Free'}</div>
-                  {isAdmin && <Badge className="bg-amber-500/20 text-amber-400 text-xs">Admin</Badge>}
+            <div className="glass-card rounded-xl p-4 space-y-3">
+              <div className="flex items-center gap-3">
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isAdmin ? 'bg-gradient-to-br from-amber-500 to-orange-600' : 'bg-gradient-to-br from-cyan-500 to-purple-500'} shadow-lg`}>
+                  {isAdmin ? <Shield className="h-5 w-5 text-white" /> : <User className="h-5 w-5 text-white" />}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-semibold text-white truncate">{profile?.full_name || profile?.email?.split('@')[0] || 'Trader'}</div>
+                  <div className="flex items-center gap-2">
+                    <span className={`text-xs font-medium ${isAdmin ? 'text-amber-400' : 'text-cyan-400'}`}>
+                      {isAdmin ? 'Administrator' : (profile?.plan || 'Free').toUpperCase()}
+                    </span>
+                    {isAdmin && <Badge className="bg-amber-500/20 text-amber-400 text-[10px] px-1.5 py-0">ADMIN</Badge>}
+                  </div>
                 </div>
               </div>
-              <Button variant="ghost" size="icon" onClick={handleSignOut} className="h-8 w-8 text-red-400 hover:text-red-300">
-                <LogOut className="h-4 w-4" />
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={handleSignOut} 
+                className="w-full h-9 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 border border-red-500/20 transition-all"
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                Sign Out
               </Button>
             </div>
           ) : (
             <div className="flex justify-center">
-              <Button variant="ghost" size="icon" onClick={handleSignOut} className="text-red-400">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={handleSignOut} 
+                className="h-10 w-10 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-all"
+              >
                 <LogOut className="h-4 w-4" />
               </Button>
             </div>
@@ -1818,37 +1870,50 @@ export default function Home() {
         </div>
       </aside>
 
-      {/* Main Content */}
-      <main className={`flex-1 transition-all duration-300 ${sidebarOpen ? 'ml-64' : 'ml-16'}`}>
-        <header className="sticky top-0 z-40 bg-gray-950/80 backdrop-blur-sm border-b border-gray-800">
+      {/* Main Content Area */}
+      <main className={`flex-1 transition-all duration-500 ${sidebarOpen ? 'ml-72' : 'ml-20'}`}>
+        {/* Header */}
+        <header className="sticky top-0 z-40 glass border-b border-white/5">
           <div className="flex items-center justify-between px-6 py-4">
             <div className="flex items-center gap-4">
-              <h1 className="text-xl font-bold text-white">
-                {currentSidebarItems.find(item => item.id === activeSection)?.label || 'Dashboard'}
-              </h1>
+              <div>
+                <h1 className="text-2xl font-bold text-white tracking-tight">
+                  {currentSidebarItems.find(item => item.id === activeSection)?.label || 'Dashboard'}
+                </h1>
+                <p className="text-gray-500 text-sm">
+                  {currentTime ? currentTime.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' }) : ''}
+                </p>
+              </div>
               {!isAdmin && (
-                <Badge className="bg-green-500/20 text-green-400 border-green-500/30">
-                  <span className="relative flex h-2 w-2 mr-1">
+                <Badge className="bg-green-500/10 text-green-400 border-green-500/20 px-3 py-1.5 animate-pulse">
+                  <span className="relative flex h-2 w-2 mr-2">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
                   </span>
-                  Live
+                  Markets Open
                 </Badge>
               )}
               {isAdmin && (
-                <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30">
-                  <Shield className="h-3 w-3 mr-1" />
-                  Admin Mode
+                <Badge className="bg-amber-500/10 text-amber-400 border-amber-500/20 px-3 py-1.5">
+                  <Shield className="h-4 w-4 mr-1.5" />
+                  Admin Mode Active
                 </Badge>
               )}
             </div>
             <div className="flex items-center gap-4">
-              <div className="text-sm text-gray-400">
-                {currentTime ? currentTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }) : '--:--:--'}
+              {/* Live Clock */}
+              <div className="glass-card rounded-xl px-4 py-2 flex items-center gap-3">
+                <Clock className="h-4 w-4 text-purple-400" />
+                <span className="text-sm font-mono text-gray-300">
+                  {currentTime ? currentTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }) : '--:--:--'}
+                </span>
               </div>
               {!isAdmin && (
-                <Button className="bg-purple-500 hover:bg-purple-600" onClick={() => setActiveSection('pricing')}>
-                  <CreditCard className="h-4 w-4 mr-1" />
+                <Button 
+                  className="bg-gradient-to-r from-purple-500 to-cyan-500 hover:from-purple-600 hover:to-cyan-600 text-white font-medium shadow-lg shadow-purple-500/25 rounded-xl px-6 h-11 transition-all hover:scale-105"
+                  onClick={() => setActiveSection('pricing')}
+                >
+                  <Sparkles className="h-4 w-4 mr-2" />
                   Upgrade Plan
                 </Button>
               )}
@@ -1856,7 +1921,8 @@ export default function Home() {
           </div>
         </header>
 
-        <ScrollArea className="h-[calc(100vh-73px)]">
+        {/* Content */}
+        <ScrollArea className="h-[calc(100vh-81px)]">
           <div className="p-6">
             {isAdmin ? renderAdminContent() : renderContent()}
           </div>
