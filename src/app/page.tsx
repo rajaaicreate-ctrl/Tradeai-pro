@@ -1871,7 +1871,7 @@ export default function Home() {
       </aside>
 
       {/* Main Content Area */}
-      <main className={`flex-1 transition-all duration-500 ${sidebarOpen ? 'ml-72' : 'ml-20'}`}>
+      <main className={`flex-1 transition-all duration-500 ${sidebarOpen ? 'ml-72' : 'ml-20'} overflow-hidden`}>
         {/* Header */}
         <header className="sticky top-0 z-40 glass border-b border-white/5">
           <div className="flex items-center justify-between px-6 py-4">
@@ -1923,7 +1923,7 @@ export default function Home() {
 
         {/* Content */}
         <ScrollArea className="h-[calc(100vh-81px)]">
-          <div className="p-6">
+          <div className="p-6 min-w-0 max-w-full overflow-x-hidden">
             {isAdmin ? renderAdminContent() : renderContent()}
           </div>
         </ScrollArea>

@@ -684,7 +684,7 @@ export default function MarketsPage() {
   ]
 
   return (
-    <div className="space-y-6 min-w-0 w-full">
+    <div className="space-y-6 min-w-0 w-full max-w-full overflow-x-hidden">
       <PriceTicker pairs={ALL_PAIRS} />
 
       {/* Search Bar */}
@@ -715,9 +715,9 @@ export default function MarketsPage() {
       </div>
 
       {/* Main Grid */}
-      <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 min-w-0">
         {/* Left Sidebar */}
-        <div className="xl:col-span-1 space-y-6 order-2 xl:order-1">
+        <div className="xl:col-span-1 space-y-6 order-2 xl:order-1 min-w-0">
           {/* Symbol Selector */}
           <Card className="backdrop-blur-2xl bg-white/[0.03] border border-white/[0.08]">
             <CardHeader className="pb-2">
@@ -753,7 +753,7 @@ export default function MarketsPage() {
         </div>
 
         {/* Main Chart Area */}
-        <div className="xl:col-span-3 space-y-6 order-1 xl:order-2 min-w-0">
+        <div className="xl:col-span-3 space-y-6 order-1 xl:order-2 min-w-0 max-w-full overflow-hidden">
           <MarketStatsPanel symbol={selectedSymbol.symbol} basePrice={selectedSymbol.basePrice} />
           
           <MainChart key={selectedSymbol.symbol} symbol={selectedSymbol.symbol} basePrice={selectedSymbol.basePrice}
