@@ -34,6 +34,14 @@ import {
   DollarSign
 } from 'lucide-react'
 import { formatPrice, PRICING_PLANS, INDIA_PRICING, getRegionalPrice, type BillingPeriod, type PricingPlan } from '@/lib/subscription/types'
+import {
+  PrivacyPolicy,
+  TermsOfService,
+  SecurityPolicy,
+  ContactPage,
+  RiskDisclaimer,
+  type LegalPage
+} from '@/components/legal'
 
 interface LandingPageProps {
   onGetStarted: () => void
@@ -62,6 +70,7 @@ export default function LandingPage({ onGetStarted, onLogin }: LandingPageProps)
   const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>('monthly')
   const [scrolled, setScrolled] = useState(false)
   const [locationLoading, setLocationLoading] = useState(true)
+  const [currentLegalPage, setCurrentLegalPage] = useState<LegalPage>(null)
   
   const featuresRef = useRef<HTMLDivElement>(null)
   const pricingRef = useRef<HTMLDivElement>(null)
@@ -177,6 +186,20 @@ export default function LandingPage({ onGetStarted, onLogin }: LandingPageProps)
       rating: 5
     }
   ]
+
+  // Render legal pages
+  if (currentLegalPage === 'privacy') {
+    return <PrivacyPolicy onBack={() => setCurrentLegalPage(null)} />
+  }
+  if (currentLegalPage === 'terms') {
+    return <TermsOfService onBack={() => setCurrentLegalPage(null)} />
+  }
+  if (currentLegalPage === 'security') {
+    return <SecurityPolicy onBack={() => setCurrentLegalPage(null)} />
+  }
+  if (currentLegalPage === 'contact') {
+    return <ContactPage onBack={() => setCurrentLegalPage(null)} />
+  }
 
   return (
     <div className="min-h-screen bg-gray-950 text-white overflow-x-hidden">
@@ -713,6 +736,13 @@ export default function LandingPage({ onGetStarted, onLogin }: LandingPageProps)
         </div>
       </section>
 
+      {/* Risk Disclaimer Section */}
+      <section className="py-8 px-4">
+        <div className="max-w-7xl mx-auto">
+          <RiskDisclaimer />
+        </div>
+      </section>
+
       {/* Footer */}
       <footer className="border-t border-gray-800/50 py-12 px-4">
         <div className="max-w-7xl mx-auto">
@@ -731,8 +761,8 @@ export default function LandingPage({ onGetStarted, onLogin }: LandingPageProps)
             <div>
               <h4 className="text-white font-semibold mb-4">Product</h4>
               <ul className="space-y-2 text-gray-500 text-sm">
-                <li><a href="#" className="hover:text-white transition-colors">Features</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Pricing</a></li>
+                <li><button onClick={() => scrollToSection(featuresRef)} className="hover:text-white transition-colors">Features</button></li>
+                <li><button onClick={() => scrollToSection(pricingRef)} className="hover:text-white transition-colors">Pricing</button></li>
                 <li><a href="#" className="hover:text-white transition-colors">API</a></li>
                 <li><a href="#" className="hover:text-white transition-colors">Integrations</a></li>
               </ul>
@@ -743,21 +773,22 @@ export default function LandingPage({ onGetStarted, onLogin }: LandingPageProps)
                 <li><a href="#" className="hover:text-white transition-colors">About</a></li>
                 <li><a href="#" className="hover:text-white transition-colors">Blog</a></li>
                 <li><a href="#" className="hover:text-white transition-colors">Careers</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Contact</a></li>
+                <li><button onClick={() => setCurrentLegalPage('contact')} className="hover:text-white transition-colors">Contact</button></li>
               </ul>
             </div>
             <div>
               <h4 className="text-white font-semibold mb-4">Legal</h4>
               <ul className="space-y-2 text-gray-500 text-sm">
-                <li><a href="#" className="hover:text-white transition-colors">Privacy</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Terms</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Security</a></li>
+                <li><button onClick={() => setCurrentLegalPage('privacy')} className="hover:text-white transition-colors">Privacy Policy</button></li>
+                <li><button onClick={() => setCurrentLegalPage('terms')} className="hover:text-white transition-colors">Terms of Service</button></li>
+                <li><button onClick={() => setCurrentLegalPage('security')} className="hover:text-white transition-colors">Security</button></li>
+                <li><button onClick={() => setCurrentLegalPage('contact')} className="hover:text-white transition-colors">Contact</button></li>
               </ul>
             </div>
           </div>
           <div className="border-t border-gray-800/50 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
             <p className="text-gray-500 text-sm">
-              © 2024 TradeAI Pro. All rights reserved.
+              © 2025 TradeAI Pro. All rights reserved.
             </p>
             <div className="flex items-center gap-4 text-gray-500 text-sm">
               <span className="flex items-center gap-1">
