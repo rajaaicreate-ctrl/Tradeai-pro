@@ -149,9 +149,35 @@ export interface WebhookEvent {
 }
 
 // ============================================
+// REGIONAL PRICING CONFIGURATION
+// ============================================
+
+export interface RegionalPricing {
+  currency: 'INR' | 'USD'
+  symbol: '₹' | '$'
+  monthlyPrice: number
+  yearlyPrice: number
+}
+
+// Regional pricing for each plan
+export const REGIONAL_PRICING: Record<string, RegionalPricing> = {
+  IN: {
+    currency: 'INR',
+    symbol: '₹',
+    monthlyPrice: 0, // Base multiplier applied dynamically
+  },
+  US: {
+    currency: 'USD',
+    symbol: '$',
+    monthlyPrice: 0, // Base multiplier applied dynamically
+  }
+}
+
+// ============================================
 // PRICING PLANS CONFIGURATION
 // ============================================
 
+// Base prices in USD (used for global users)
 export const PRICING_PLANS: PricingPlan[] = [
   {
     id: 'free',
@@ -188,8 +214,8 @@ export const PRICING_PLANS: PricingPlan[] = [
     tier: 'pro',
     name: 'Pro',
     description: 'For serious traders who need advanced features',
-    monthlyPrice: 29,
-    yearlyPrice: 290,
+    monthlyPrice: 12,  // $12/month for global users
+    yearlyPrice: 120,  // ~$10/month yearly
     currency: 'USD',
     highlighted: true,
     features: [
@@ -225,10 +251,10 @@ export const PRICING_PLANS: PricingPlan[] = [
   {
     id: 'enterprise',
     tier: 'enterprise',
-    name: 'Enterprise',
+    name: 'Elite',
     description: 'For professional traders and teams',
-    monthlyPrice: 99,
-    yearlyPrice: 990,
+    monthlyPrice: 35,  // $35/month for global users
+    yearlyPrice: 350,  // ~$29/month yearly
     currency: 'USD',
     features: [
       { name: 'Everything in Pro', included: true },
@@ -261,6 +287,39 @@ export const PRICING_PLANS: PricingPlan[] = [
     }
   }
 ]
+
+// ============================================
+// REGIONAL PRICE HELPER FUNCTIONS
+// ============================================
+
+// India-specific pricing (direct INR values)
+export const INDIA_PRICING: Record<string, { monthly: number; yearly: number }> = {
+  free: { monthly: 0, yearly: 0 },
+  pro: { monthly: 999, yearly: 9990 },      // ₹999/month, ₹9990/year (save ~17%)
+  enterprise: { monthly: 2999, yearly: 29990 } // ₹2999/month, ₹29990/year
+}
+
+// Get regional price for a plan
+export function getRegionalPrice(
+  plan: PricingPlan, 
+  isIndia: boolean,
+  billingPeriod: 'monthly' | 'yearly'
+): { price: number; currency: string; symbol: string } {
+  if (isIndia) {
+    const indiaPrice = INDIA_PRICING[plan.tier]
+    return {
+      price: billingPeriod === 'yearly' ? indiaPrice.yearly : indiaPrice.monthly,
+      currency: 'INR',
+      symbol: '₹'
+    }
+  }
+  
+  return {
+    price: billingPeriod === 'yearly' ? plan.yearlyPrice : plan.monthlyPrice,
+    currency: 'USD',
+    symbol: '$'
+  }
+}
 
 // ============================================
 // HELPER FUNCTIONS

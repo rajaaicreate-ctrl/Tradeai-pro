@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -17,9 +17,20 @@ import {
   CreditCard,
   CheckCircle,
   Loader2,
-  Shield
+  Shield,
+  Globe,
+  IndianRupee,
+  DollarSign
 } from 'lucide-react'
-import { PRICING_PLANS, formatPrice, calculateYearlySavings, BillingPeriod, SubscriptionTier } from '@/lib/subscription/types'
+import { PRICING_PLANS, formatPrice, calculateYearlySavings, BillingPeriod, SubscriptionTier, getRegionalPrice, INDIA_PRICING } from '@/lib/subscription/types'
+
+interface GeoLocation {
+  country: string
+  countryCode: string
+  isIndia: boolean
+  currency: 'INR' | 'USD'
+  symbol: '₹' | '$'
+}
 
 interface PricingPlansProps {
   currentTier?: SubscriptionTier
@@ -36,6 +47,29 @@ export default function PricingPlans({
   const [loading, setLoading] = useState<string | null>(null)
   const [showCheckout, setShowCheckout] = useState(false)
   const [selectedPlan, setSelectedPlan] = useState<typeof PRICING_PLANS[0] | null>(null)
+  const [geoLocation, setGeoLocation] = useState<GeoLocation>({
+    country: 'India',
+    countryCode: 'IN',
+    isIndia: true,
+    currency: 'INR',
+    symbol: '₹'
+  })
+
+  // Detect user location on mount
+  useEffect(() => {
+    const detectLocation = async () => {
+      try {
+        const response = await fetch('/api/geolocation')
+        if (response.ok) {
+          const data: GeoLocation = await response.json()
+          setGeoLocation(data)
+        }
+      } catch (error) {
+        console.error('Failed to detect location:', error)
+      }
+    }
+    detectLocation()
+  }, [])
 
   const handleSelectPlan = async (plan: typeof PRICING_PLANS[0]) => {
     if (plan.tier === currentTier) return
@@ -108,6 +142,28 @@ export default function PricingPlans({
         <p className="text-gray-400">Unlock the full potential of AI-powered trading</p>
       </div>
 
+      {/* Region Toggle */}
+      <div className="flex items-center justify-center gap-4">
+        <button
+          onClick={() => setGeoLocation(prev => ({ ...prev, isIndia: true, currency: 'INR', symbol: '₹', countryCode: 'IN' }))}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
+            geoLocation.isIndia ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30' : 'text-gray-400 hover:text-white'
+          }`}
+        >
+          <span className="text-lg">🇮🇳</span>
+          <span>India (INR)</span>
+        </button>
+        <button
+          onClick={() => setGeoLocation(prev => ({ ...prev, isIndia: false, currency: 'USD', symbol: '$', countryCode: 'US' }))}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
+            !geoLocation.isIndia ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30' : 'text-gray-400 hover:text-white'
+          }`}
+        >
+          <Globe className="h-4 w-4" />
+          <span>International (USD)</span>
+        </button>
+      </div>
+
       {/* Billing Toggle */}
       {showToggle && (
         <div className="flex items-center justify-center gap-4">
@@ -131,9 +187,8 @@ export default function PricingPlans({
       {/* Plans Grid */}
       <div className="grid md:grid-cols-3 gap-6">
         {PRICING_PLANS.map((plan) => {
-          const price = billingPeriod === 'yearly' ? plan.yearlyPrice : plan.monthlyPrice
+          const { price, symbol } = getRegionalPrice(plan, geoLocation.isIndia, billingPeriod)
           const isCurrent = plan.tier === currentTier
-          const savings = calculateYearlySavings(plan)
           const isLoading = loading === plan.tier
 
           return (
@@ -166,14 +221,17 @@ export default function PricingPlans({
                 {/* Price */}
                 <div className="mb-6">
                   <div className="flex items-baseline justify-center gap-1">
+                    <span className="text-4xl font-bold text-white">{symbol}</span>
                     <span className="text-4xl font-bold text-white">
-                      {formatPrice(price, plan.currency)}
+                      {price.toLocaleString()}
                     </span>
                     <span className="text-gray-400">/{billingPeriod === 'yearly' ? 'year' : 'month'}</span>
                   </div>
-                  {billingPeriod === 'yearly' && savings > 0 && (
+                  {billingPeriod === 'yearly' && plan.tier !== 'free' && (
                     <p className="text-sm text-green-400 mt-1">
-                      Save {formatPrice(savings, plan.currency)}/year
+                      Save {symbol}{geoLocation.isIndia 
+                        ? (INDIA_PRICING[plan.tier].monthly * 12 - INDIA_PRICING[plan.tier].yearly).toLocaleString()
+                        : (plan.monthlyPrice * 12 - plan.yearlyPrice).toLocaleString()}/year
                     </p>
                   )}
                 </div>
@@ -217,7 +275,7 @@ export default function PricingPlans({
                   ) : isCurrent ? (
                     <CheckCircle className="h-4 w-4 mr-2" />
                   ) : null}
-                  {isCurrent ? 'Current Plan' : plan.monthlyPrice === 0 ? 'Get Started' : 'Upgrade'}
+                  {isCurrent ? 'Current Plan' : plan.tier === 'free' ? 'Get Started' : 'Upgrade'}
                 </Button>
               </CardFooter>
             </Card>
@@ -227,14 +285,29 @@ export default function PricingPlans({
 
       {/* Trust Badges */}
       <div className="flex items-center justify-center gap-8 pt-6">
-        <div className="flex items-center gap-2 text-gray-400">
-          <Shield className="h-5 w-5 text-green-400" />
-          <span className="text-sm">SSL Secured</span>
-        </div>
-        <div className="flex items-center gap-2 text-gray-400">
-          <CreditCard className="h-5 w-5 text-blue-400" />
-          <span className="text-sm">Cancel Anytime</span>
-        </div>
+        {geoLocation.isIndia ? (
+          <>
+            <div className="flex items-center gap-2 text-gray-400">
+              <Shield className="h-5 w-5 text-green-400" />
+              <span className="text-sm">Razorpay Secured</span>
+            </div>
+            <div className="flex items-center gap-2 text-gray-400">
+              <IndianRupee className="h-5 w-5 text-purple-400" />
+              <span className="text-sm">UPI / Cards / NetBanking</span>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="flex items-center gap-2 text-gray-400">
+              <Shield className="h-5 w-5 text-green-400" />
+              <span className="text-sm">Stripe Secured</span>
+            </div>
+            <div className="flex items-center gap-2 text-gray-400">
+              <DollarSign className="h-5 w-5 text-purple-400" />
+              <span className="text-sm">Credit / Debit Cards</span>
+            </div>
+          </>
+        )}
         <div className="flex items-center gap-2 text-gray-400">
           <CheckCircle className="h-5 w-5 text-purple-400" />
           <span className="text-sm">7-Day Money Back</span>
@@ -268,41 +341,36 @@ export default function PricingPlans({
               <div className="flex justify-between pt-2 border-t border-gray-700">
                 <span className="text-gray-400">Total</span>
                 <span className="text-2xl font-bold text-white">
-                  {formatPrice(
-                    billingPeriod === 'yearly' 
-                      ? (selectedPlan?.yearlyPrice || 0) 
-                      : (selectedPlan?.monthlyPrice || 0),
-                    'USD'
-                  )}
+                  {geoLocation.symbol}{selectedPlan ? getRegionalPrice(selectedPlan, geoLocation.isIndia, billingPeriod).price.toLocaleString() : 0}
                 </span>
               </div>
             </div>
 
             {/* Payment Providers */}
             <div className="space-y-3">
-              <Button 
-                className="w-full bg-purple-500 hover:bg-purple-600"
-                onClick={() => {
-                  // Stripe checkout
-                  setShowCheckout(false)
-                  // In production, redirect to Stripe Checkout
-                }}
-              >
-                <CreditCard className="h-4 w-4 mr-2" />
-                Pay with Stripe
-              </Button>
-              
-              <Button 
-                variant="outline"
-                className="w-full border-gray-700 hover:bg-gray-800"
-                onClick={() => {
-                  // Razorpay checkout
-                  setShowCheckout(false)
-                  // In production, open Razorpay Checkout
-                }}
-              >
-                Pay with Razorpay (INR)
-              </Button>
+              {geoLocation.isIndia ? (
+                <Button 
+                  className="w-full bg-purple-500 hover:bg-purple-600"
+                  onClick={() => {
+                    // Razorpay checkout
+                    setShowCheckout(false)
+                  }}
+                >
+                  <IndianRupee className="h-4 w-4 mr-2" />
+                  Pay with Razorpay
+                </Button>
+              ) : (
+                <Button 
+                  className="w-full bg-purple-500 hover:bg-purple-600"
+                  onClick={() => {
+                    // Stripe checkout
+                    setShowCheckout(false)
+                  }}
+                >
+                  <CreditCard className="h-4 w-4 mr-2" />
+                  Pay with Stripe
+                </Button>
+              )}
             </div>
 
             {/* Demo Notice */}

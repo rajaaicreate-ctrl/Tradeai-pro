@@ -33,55 +33,63 @@ import {
   IndianRupee,
   DollarSign
 } from 'lucide-react'
-import { formatPrice, PRICING_PLANS, type BillingPeriod, type PricingPlan } from '@/lib/subscription/types'
+import { formatPrice, PRICING_PLANS, INDIA_PRICING, getRegionalPrice, type BillingPeriod, type PricingPlan } from '@/lib/subscription/types'
 
 interface LandingPageProps {
   onGetStarted: () => void
   onLogin: () => void
 }
 
-// Region-based pricing configuration
-const REGIONAL_PRICING = {
-  IN: {
-    currency: 'INR',
-    symbol: '₹',
-    multiplier: 83, // USD to INR conversion
-    popular: true
-  },
-  US: {
-    currency: 'USD',
-    symbol: '$',
-    multiplier: 1,
-    popular: false
-  }
+interface GeoLocation {
+  country: string
+  countryCode: string
+  isIndia: boolean
+  currency: 'INR' | 'USD'
+  symbol: '₹' | '$'
 }
 
 export default function LandingPage({ onGetStarted, onLogin }: LandingPageProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [activeFeature, setActiveFeature] = useState(0)
   const [isVisible, setIsVisible] = useState(false)
-  const [region, setRegion] = useState<'IN' | 'US'>('IN')
+  const [geoLocation, setGeoLocation] = useState<GeoLocation>({
+    country: 'India',
+    countryCode: 'IN',
+    isIndia: true,
+    currency: 'INR',
+    symbol: '₹'
+  })
   const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>('monthly')
   const [scrolled, setScrolled] = useState(false)
+  const [locationLoading, setLocationLoading] = useState(true)
   
   const featuresRef = useRef<HTMLDivElement>(null)
   const pricingRef = useRef<HTMLDivElement>(null)
 
-  // Detect user region based on timezone
+  // Detect user region based on IP address
   useEffect(() => {
-    const detectRegion = () => {
+    const detectLocation = async () => {
       try {
-        const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone
-        if (timezone.includes('Asia/Kolkata') || timezone.includes('Asia/Calcutta')) {
-          setRegion('IN')
-        } else {
-          setRegion('US')
+        const response = await fetch('/api/geolocation')
+        if (response.ok) {
+          const data: GeoLocation = await response.json()
+          setGeoLocation(data)
         }
-      } catch {
-        setRegion('US')
+      } catch (error) {
+        console.error('Failed to detect location:', error)
+        // Default to India on error
+        setGeoLocation({
+          country: 'India',
+          countryCode: 'IN',
+          isIndia: true,
+          currency: 'INR',
+          symbol: '₹'
+        })
+      } finally {
+        setLocationLoading(false)
       }
     }
-    detectRegion()
+    detectLocation()
   }, [])
 
   // Handle scroll
@@ -107,11 +115,8 @@ export default function LandingPage({ onGetStarted, onLogin }: LandingPageProps)
   }, [])
 
   // Get regional price
-  const getRegionalPrice = (plan: PricingPlan) => {
-    const regionConfig = REGIONAL_PRICING[region]
-    const basePrice = billingPeriod === 'yearly' ? plan.yearlyPrice : plan.monthlyPrice
-    const convertedPrice = basePrice * regionConfig.multiplier
-    return { price: convertedPrice, symbol: regionConfig.symbol, currency: regionConfig.currency }
+  const getPlanPrice = (plan: PricingPlan) => {
+    return getRegionalPrice(plan, geoLocation.isIndia, billingPeriod)
   }
 
   const scrollToSection = (ref: React.RefObject<HTMLDivElement | null>) => {
@@ -469,18 +474,18 @@ export default function LandingPage({ onGetStarted, onLogin }: LandingPageProps)
             {/* Region Toggle */}
             <div className="flex items-center justify-center gap-4 mb-8">
               <button
-                onClick={() => setRegion('IN')}
+                onClick={() => setGeoLocation(prev => ({ ...prev, isIndia: true, currency: 'INR', symbol: '₹', countryCode: 'IN' }))}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
-                  region === 'IN' ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30' : 'text-gray-400 hover:text-white'
+                  geoLocation.isIndia ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30' : 'text-gray-400 hover:text-white'
                 }`}
               >
                 <span className="text-lg">🇮🇳</span>
                 <span>India (INR)</span>
               </button>
               <button
-                onClick={() => setRegion('US')}
+                onClick={() => setGeoLocation(prev => ({ ...prev, isIndia: false, currency: 'USD', symbol: '$', countryCode: 'US' }))}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
-                  region === 'US' ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30' : 'text-gray-400 hover:text-white'
+                  !geoLocation.isIndia ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30' : 'text-gray-400 hover:text-white'
                 }`}
               >
                 <Globe className="h-4 w-4" />
@@ -511,7 +516,7 @@ export default function LandingPage({ onGetStarted, onLogin }: LandingPageProps)
           {/* Pricing Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
             {PRICING_PLANS.map((plan) => {
-              const { price, symbol } = getRegionalPrice(plan)
+              const { price, symbol } = getPlanPrice(plan)
               const isHighlighted = plan.highlighted
               
               return (
@@ -548,13 +553,15 @@ export default function LandingPage({ onGetStarted, onLogin }: LandingPageProps)
                         <div className="flex items-baseline gap-1">
                           <span className="text-4xl font-bold text-white">{symbol}</span>
                           <span className="text-5xl font-bold text-white">
-                            {Math.round(price).toLocaleString()}
+                            {price.toLocaleString()}
                           </span>
                           <span className="text-gray-400">/{billingPeriod === 'yearly' ? 'year' : 'month'}</span>
                         </div>
-                        {billingPeriod === 'yearly' && plan.monthlyPrice > 0 && (
+                        {billingPeriod === 'yearly' && plan.tier !== 'free' && (
                           <p className="text-sm text-green-400 mt-1">
-                            Save {symbol}{Math.round((plan.monthlyPrice * 12 - plan.yearlyPrice) * REGIONAL_PRICING[region].multiplier).toLocaleString()}/year
+                            Save {symbol}{geoLocation.isIndia 
+                              ? (INDIA_PRICING[plan.tier].monthly * 12 - INDIA_PRICING[plan.tier].yearly).toLocaleString()
+                              : (plan.monthlyPrice * 12 - plan.yearlyPrice).toLocaleString()}/year
                           </p>
                         )}
                       </div>
@@ -590,7 +597,7 @@ export default function LandingPage({ onGetStarted, onLogin }: LandingPageProps)
                         }`}
                         size="lg"
                       >
-                        {plan.monthlyPrice === 0 ? 'Get Started Free' : 'Start Free Trial'}
+                        {plan.tier === 'free' ? 'Get Started Free' : 'Start Free Trial'}
                         <ArrowRight className="ml-2 h-4 w-4" />
                       </Button>
                     </CardContent>
@@ -602,7 +609,7 @@ export default function LandingPage({ onGetStarted, onLogin }: LandingPageProps)
 
           {/* Payment Methods */}
           <div className="flex items-center justify-center gap-6 mt-12 text-gray-500">
-            {region === 'IN' ? (
+            {geoLocation.isIndia ? (
               <>
                 <div className="flex items-center gap-2">
                   <Shield className="h-4 w-4 text-green-400" />
