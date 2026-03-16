@@ -1747,7 +1747,7 @@ export default function Home() {
   const currentSidebarItems = isAdmin ? adminSidebarItems : sidebarItems
 
   return (
-    <div className="min-h-screen bg-[#0a0a12] text-white flex relative overflow-hidden">
+    <div className="min-h-screen bg-[#0a0a12] text-white flex relative overflow-x-hidden">
       {/* Animated Background */}
       <div className="fixed inset-0 pointer-events-none">
         {/* Gradient orbs */}

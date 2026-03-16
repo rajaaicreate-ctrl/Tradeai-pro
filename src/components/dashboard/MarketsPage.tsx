@@ -684,7 +684,7 @@ export default function MarketsPage() {
   ]
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 min-w-0 w-full">
       <PriceTicker pairs={ALL_PAIRS} />
 
       {/* Search Bar */}
@@ -695,7 +695,7 @@ export default function MarketsPage() {
       </div>
 
       {/* Category Tabs & Timeframe */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-2">
+      <div className="flex items-center gap-2 overflow-x-auto pb-2 flex-wrap">
         {categories.map(cat => (
           <Button key={cat.id} variant={activeCategory === cat.id ? 'default' : 'ghost'}
             onClick={() => setActiveCategory(cat.id)}
@@ -703,7 +703,7 @@ export default function MarketsPage() {
             <cat.icon className="h-4 w-4" /> {cat.label}
           </Button>
         ))}
-        <div className="flex items-center gap-1 ml-auto">
+        <div className="flex items-center gap-1 ml-auto shrink-0">
           {TIMEFRAMES.map(tf => (
             <Button key={tf.id} size="sm" variant={selectedTimeframe === tf.id ? 'default' : 'ghost'}
               onClick={() => setSelectedTimeframe(tf.id)}
@@ -715,9 +715,9 @@ export default function MarketsPage() {
       </div>
 
       {/* Main Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
         {/* Left Sidebar */}
-        <div className="lg:col-span-1 space-y-6">
+        <div className="xl:col-span-1 space-y-6 order-2 xl:order-1">
           {/* Symbol Selector */}
           <Card className="backdrop-blur-2xl bg-white/[0.03] border border-white/[0.08]">
             <CardHeader className="pb-2">
@@ -753,7 +753,7 @@ export default function MarketsPage() {
         </div>
 
         {/* Main Chart Area */}
-        <div className="lg:col-span-3 space-y-6">
+        <div className="xl:col-span-3 space-y-6 order-1 xl:order-2 min-w-0">
           <MarketStatsPanel symbol={selectedSymbol.symbol} basePrice={selectedSymbol.basePrice} />
           
           <MainChart key={selectedSymbol.symbol} symbol={selectedSymbol.symbol} basePrice={selectedSymbol.basePrice}
@@ -761,7 +761,7 @@ export default function MarketsPage() {
             onToggleFullscreen={() => setIsFullscreen(!isFullscreen)} />
           
           {/* More Charts Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredPairs.slice(1, 7).map(pair => (
               <Card key={pair.symbol}
                 className="backdrop-blur-2xl bg-white/[0.03] border border-white/[0.08] hover:bg-white/[0.05] transition-all cursor-pointer group relative"
